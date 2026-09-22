@@ -1,0 +1,2426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpringLab Studio — Physics & Testing Laboratory</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            lab: {
+              950: '#090d16',
+              900: '#0f172a',
+              850: '#131e36',
+              800: '#1e293b',
+              700: '#334155',
+              600: '#475569',
+              accent: '#38bdf8',
+              spring: '#f59e0b',
+              kinetic: '#3b82f6',
+              potential: '#10b981',
+              thermal: '#ef4444',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(56, 189, 248, 0.25);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(56, 189, 248, 0.45);
+    }
+
+    /* Range slider custom styling */
+    input[type=range] {
+      -webkit-appearance: none;
+      background: #1e293b;
+      height: 6px;
+      border-radius: 3px;
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #38bdf8;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+      transition: transform 0.1s ease;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    /* Grid pattern background for lab */
+    .lab-grid {
+      background-image: 
+        radial-gradient(rgba(56, 189, 248, 0.08) 1px, transparent 1px),
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 24px 24px, 48px 48px, 48px 48px;
+    }
+
+    /* Glassmorphic panels */
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.82);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    
+    .glow-cyan {
+      box-shadow: 0 0 20px -3px rgba(56, 189, 248, 0.25);
+    }
+    .glow-amber {
+      box-shadow: 0 0 20px -3px rgba(245, 158, 11, 0.25);
+    }
+  </style>
+</head>
+<body class="bg-lab-950 text-slate-100 font-sans min-h-screen flex flex-col select-none overflow-x-hidden">
+
+  <!-- Top Navigation Bar -->
+  <header class="h-16 border-b border-slate-800 bg-lab-900/90 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between z-30 sticky top-0">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20 text-white font-black text-xl">
+        <svg class="w-6 h-6 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 4h3l3 12 4-12 4 12 3-12h3" />
+        </svg>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-1.5">
+            SpringLab <span class="text-sky-400 font-mono text-xs px-1.5 py-0.5 rounded bg-sky-950/80 border border-sky-500/30">PRO</span>
+          </h1>
+          <span class="hidden md:inline-block text-[11px] text-slate-400 border-l border-slate-700 pl-2">Precision Physics & Tensile Suite</span>
+        </div>
+        <p class="text-[11px] text-slate-400 font-mono hidden sm:block">RK4 Numerical Engine • 60 FPS Dynamic Solver</p>
+      </div>
+    </div>
+
+    <!-- Mode Selector Tabs -->
+    <div class="hidden lg:flex items-center bg-lab-950/90 p-1 rounded-xl border border-slate-800/80 text-xs font-semibold">
+      <button onclick="setMode('single')" id="tab-single" class="mode-tab px-3 py-1.5 rounded-lg transition-all text-sky-400 bg-sky-950/50 border border-sky-500/30 flex items-center gap-1.5 shadow-sm">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        Oscillator
+      </button>
+      <button onclick="setMode('hooke')" id="tab-hooke" class="mode-tab px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Hooke's Law Lab
+      </button>
+      <button onclick="setMode('config')" id="tab-config" class="mode-tab px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+        Series & Parallel
+      </button>
+      <button onclick="setMode('yield')" id="tab-yield" class="mode-tab px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        Tensile Yield
+      </button>
+    </div>
+
+    <!-- Global Action Bar -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <!-- Gravity Dropdown -->
+      <div class="relative flex items-center bg-lab-950 border border-slate-800 rounded-lg px-2 py-1 text-xs">
+        <span class="text-slate-400 mr-1.5 hidden sm:inline">Gravity:</span>
+        <select id="gravitySelect" onchange="setGravityPreset(this.value)" class="bg-transparent text-sky-400 font-mono font-medium focus:outline-none cursor-pointer">
+          <option value="9.80665" class="bg-slate-900 text-white">Earth (9.81 m/s²)</option>
+          <option value="1.62" class="bg-slate-900 text-white">Moon (1.62 m/s²)</option>
+          <option value="3.72" class="bg-slate-900 text-white">Mars (3.72 m/s²)</option>
+          <option value="24.79" class="bg-slate-900 text-white">Jupiter (24.79 m/s²)</option>
+          <option value="0.0" class="bg-slate-900 text-white">Zero-G (0.00 m/s²)</option>
+          <option value="custom" class="bg-slate-900 text-white">Custom</option>
+        </select>
+      </div>
+
+      <!-- Audio Mute Button -->
+      <button id="soundBtn" onclick="toggleAudio()" class="p-2 rounded-lg bg-lab-950 border border-slate-800 text-slate-300 hover:text-sky-400 hover:border-slate-700 transition" title="Toggle Audio Synthesizer">
+        <svg id="soundIconOn" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+        <svg id="soundIconOff" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/></svg>
+      </button>
+
+      <!-- Theory & Help Modal Trigger -->
+      <button onclick="toggleModal('theoryModal')" class="p-2 rounded-lg bg-lab-950 border border-slate-800 text-slate-300 hover:text-amber-400 hover:border-slate-700 transition" title="Physics Theory & Formulas">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Mode Submenu -->
+  <div class="lg:hidden flex items-center justify-around bg-lab-900 border-b border-slate-800 px-2 py-1.5 text-xs font-medium">
+    <button onclick="setMode('single')" id="tab-single-m" class="px-2.5 py-1 rounded text-sky-400 bg-sky-950/60">Oscillator</button>
+    <button onclick="setMode('hooke')" id="tab-hooke-m" class="px-2.5 py-1 rounded text-slate-400">Hooke's</button>
+    <button onclick="setMode('config')" id="tab-config-m" class="px-2.5 py-1 rounded text-slate-400">Series/Par</button>
+    <button onclick="setMode('yield')" id="tab-yield-m" class="px-2.5 py-1 rounded text-slate-400">Yield Test</button>
+  </div>
+
+  <!-- Main Grid Workspace -->
+  <main class="flex-1 grid grid-cols-1 xl:grid-cols-12 gap-0 overflow-hidden relative">
+
+    <!-- LEFT / MAIN: Physics Interactive Canvas Arena (Col 1 to 7/8) -->
+    <div class="xl:col-span-7 2xl:col-span-8 flex flex-col border-b xl:border-b-0 xl:border-r border-slate-800 relative bg-lab-950 overflow-hidden">
+      
+      <!-- Canvas Overlay Controls (Top Floating Pill) -->
+      <div class="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none z-10 gap-2">
+        <div class="flex items-center gap-1.5 bg-lab-900/90 backdrop-blur-md border border-slate-700/70 rounded-xl p-1.5 shadow-xl pointer-events-auto">
+          <!-- Play / Pause -->
+          <button id="playBtn" onclick="togglePlay()" class="w-8 h-8 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 flex items-center justify-center font-bold transition shadow-sm" title="Play/Pause (Space)">
+            <svg id="playIcon" class="w-4 h-4 fill-current hidden" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <svg id="pauseIcon" class="w-4 h-4 fill-current" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          </button>
+          
+          <!-- Step forward -->
+          <button onclick="stepSimulation()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition" title="Step +0.02s">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
+          </button>
+          
+          <!-- Reset -->
+          <button onclick="resetSimulation()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition" title="Reset State (R)">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          </button>
+
+          <div class="h-4 w-px bg-slate-700 mx-1"></div>
+
+          <!-- Speed Multiplier -->
+          <select id="timeSpeedSelect" onchange="setTimeScale(this.value)" class="bg-slate-800 text-xs font-mono text-sky-400 rounded-lg px-2 py-1 border border-slate-700 focus:outline-none cursor-pointer">
+            <option value="0.1">0.1x (Slow)</option>
+            <option value="0.25">0.25x</option>
+            <option value="0.5">0.5x</option>
+            <option value="1.0" selected>1.0x (Real)</option>
+            <option value="2.0">2.0x (Fast)</option>
+          </select>
+        </div>
+
+        <!-- Overlays Display Toggles (Ruler, Vectors, Energy, Photogate) -->
+        <div class="flex items-center gap-1 bg-lab-900/90 backdrop-blur-md border border-slate-700/70 rounded-xl p-1 shadow-xl pointer-events-auto text-xs font-medium">
+          <button id="toggleRulerBtn" onclick="toggleOverlay('ruler')" class="px-2.5 py-1 rounded-lg text-sky-400 bg-sky-950/60 border border-sky-500/40 transition">Ruler</button>
+          <button id="toggleVectorsBtn" onclick="toggleOverlay('vectors')" class="px-2.5 py-1 rounded-lg text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 transition">Forces</button>
+          <button id="toggleGuidesBtn" onclick="toggleOverlay('guides')" class="px-2.5 py-1 rounded-lg text-amber-400 bg-amber-950/60 border border-amber-500/40 transition">Markers</button>
+          <button id="toggleGateBtn" onclick="toggleOverlay('photogate')" class="px-2.5 py-1 rounded-lg text-indigo-400 bg-indigo-950/60 border border-indigo-500/40 transition hidden sm:inline-block">Photogate</button>
+        </div>
+      </div>
+
+      <!-- Main Visual Interactive Canvas Container -->
+      <div class="relative flex-1 w-full h-[450px] sm:h-[520px] xl:h-auto lab-grid cursor-grab active:cursor-grabbing overflow-hidden" id="canvasContainer">
+        <canvas id="simCanvas" class="w-full h-full block"></canvas>
+
+        <!-- Dynamic Live HUD Overlay (Bottom-left of canvas) -->
+        <div class="absolute bottom-3 left-3 bg-lab-950/85 backdrop-blur-md border border-slate-800 rounded-xl p-3 pointer-events-none text-xs font-mono space-y-1 shadow-2xl">
+          <div class="flex items-center justify-between gap-4 text-slate-400">
+            <span>Displacement &Delta;x:</span>
+            <span id="hud-disp" class="font-bold text-white">+0.00 cm</span>
+          </div>
+          <div class="flex items-center justify-between gap-4 text-slate-400">
+            <span>Velocity v:</span>
+            <span id="hud-vel" class="text-sky-400">0.000 m/s</span>
+          </div>
+          <div class="flex items-center justify-between gap-4 text-slate-400">
+            <span>Acceleration a:</span>
+            <span id="hud-acc" class="text-amber-400">0.00 m/s²</span>
+          </div>
+          <div class="flex items-center justify-between gap-4 text-slate-400">
+            <span>Restoration F:</span>
+            <span id="hud-force" class="text-emerald-400">0.00 N</span>
+          </div>
+          <div class="flex items-center justify-between gap-4 text-slate-400 pt-1 border-t border-slate-800/80">
+            <span>Oscillation Period T:</span>
+            <span id="hud-period" class="text-indigo-400 font-bold">-- s</span>
+          </div>
+        </div>
+
+        <!-- Drag Hint Notice -->
+        <div id="dragHint" class="absolute bottom-4 right-4 bg-sky-950/80 text-sky-300 border border-sky-500/30 rounded-lg px-3 py-1.5 text-xs font-medium pointer-events-none flex items-center gap-2 animate-pulse">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/></svg>
+          Click & Drag Mass to Stretch / Release
+        </div>
+
+        <!-- Yield Fracture Alert Banner -->
+        <div id="fractureBanner" class="absolute inset-x-6 top-20 bg-rose-950/95 border-2 border-rose-500 text-rose-200 rounded-xl p-4 shadow-2xl z-20 flex items-center justify-between hidden">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">💥</span>
+            <div>
+              <h4 class="font-bold text-white text-sm">SPRING FRACTURE DETECTED!</h4>
+              <p class="text-xs text-rose-300">Stress exceeded ultimate tensile strength. The spring has catastrophically sheared.</p>
+            </div>
+          </div>
+          <button onclick="resetSimulation()" class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs transition">
+            Replace Spring
+          </button>
+        </div>
+      </div>
+
+      <!-- Oscilloscope & Real-time Graph Strip (Bottom of Canvas Column) -->
+      <div class="h-44 sm:h-52 border-t border-slate-800 bg-lab-900/90 flex flex-col p-3">
+        <div class="flex items-center justify-between pb-2">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Multi-Channel Telemetry Oscilloscope</span>
+          </div>
+
+          <!-- Scope Channel Selector -->
+          <div class="flex items-center bg-lab-950 rounded-lg p-0.5 border border-slate-800 text-[11px] font-mono">
+            <button onclick="setScopeChannel('xt')" id="chan-xt" class="scope-btn px-2.5 py-0.5 rounded text-sky-400 bg-sky-950/60 font-semibold">x(t) Position</button>
+            <button onclick="setScopeChannel('vt')" id="chan-vt" class="scope-btn px-2.5 py-0.5 rounded text-slate-400 hover:text-white">v(t) Velocity</button>
+            <button onclick="setScopeChannel('phase')" id="chan-phase" class="scope-btn px-2.5 py-0.5 rounded text-slate-400 hover:text-white">Phase (v vs x)</button>
+            <button onclick="setScopeChannel('fx')" id="chan-fx" class="scope-btn px-2.5 py-0.5 rounded text-slate-400 hover:text-white">F vs &Delta;x</button>
+          </div>
+        </div>
+
+        <!-- Scope Canvas -->
+        <div class="flex-1 w-full relative bg-lab-950 rounded-lg border border-slate-800/80 overflow-hidden">
+          <canvas id="scopeCanvas" class="w-full h-full block"></canvas>
+          <div id="scopeLabels" class="absolute top-1 left-2 text-[10px] font-mono text-slate-500 pointer-events-none">
+            Scale: Auto-Calibrated
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Laboratory Controls, Measurement & Mode Tools (Col 8 to 12) -->
+    <div class="xl:col-span-5 2xl:col-span-4 flex flex-col bg-lab-900/70 border-slate-800 overflow-y-auto max-h-[calc(100vh-4rem)] p-4 sm:p-5 gap-4">
+
+      <!-- Energy Conservation Bar Module -->
+      <div class="glass-panel rounded-2xl p-4 shadow-lg border border-slate-800">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Energy Partition & Conservation
+          </h3>
+          <span id="totalEnergyText" class="text-xs font-mono text-slate-400">Total: 0.00 J</span>
+        </div>
+
+        <!-- Dynamic Energy Stacked Bar -->
+        <div class="h-4 w-full bg-slate-950 rounded-full overflow-hidden flex p-0.5 gap-0.5 border border-slate-800">
+          <div id="bar-kinetic" class="h-full bg-blue-500 rounded-l transition-all duration-75" style="width: 25%" title="Kinetic Energy"></div>
+          <div id="bar-elastic" class="h-full bg-emerald-500 transition-all duration-75" style="width: 25%" title="Spring Elastic Potential"></div>
+          <div id="bar-grav" class="h-full bg-amber-500 transition-all duration-75" style="width: 25%" title="Gravitational Potential"></div>
+          <div id="bar-thermal" class="h-full bg-rose-500 rounded-r transition-all duration-75" style="width: 25%" title="Dissipated Thermal (Damping)"></div>
+        </div>
+
+        <!-- Legend with values -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 text-[11px] font-mono">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+            <span class="text-slate-400">Kinetic:</span>
+            <span id="val-kinetic" class="text-white ml-auto">0.0 J</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <span class="text-slate-400">Elastic:</span>
+            <span id="val-elastic" class="text-white ml-auto">0.0 J</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+            <span class="text-slate-400">Gravity:</span>
+            <span id="val-grav" class="text-white ml-auto">0.0 J</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+            <span class="text-slate-400">Thermal:</span>
+            <span id="val-thermal" class="text-white ml-auto">0.0 J</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= MODE 1: SINGLE OSCILLATOR PANEL ================= -->
+      <div id="panel-single" class="mode-panel space-y-4">
+        <div class="glass-panel rounded-2xl p-4 border border-slate-800">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-sky-400">Spring & Mass Parameters</h3>
+            <!-- Preset Selector -->
+            <select id="presetSelect" onchange="applyPreset(this.value)" class="bg-lab-950 text-slate-300 text-xs font-medium rounded-lg px-2 py-1 border border-slate-700 focus:outline-none">
+              <option value="" disabled selected>Load Preset...</option>
+              <option value="slinky">Soft Slinky</option>
+              <option value="automotive">Automotive Suspension</option>
+              <option value="hairspring">Watch Hairspring</option>
+              <option value="critical">Critically Damped</option>
+              <option value="resonance">Resonance Driver</option>
+              <option value="heavy">Extreme Heavy Die Spring</option>
+            </select>
+          </div>
+
+          <!-- Spring Constant Slider -->
+          <div class="space-y-1 mb-3">
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-300 font-medium">Spring Constant (k):</span>
+              <span id="kDisplay" class="font-mono text-sky-400 font-bold">50.0 N/m</span>
+            </div>
+            <input type="range" id="kSlider" min="5" max="400" step="1" value="50" oninput="updateParam('k', this.value)" class="w-full">
+            <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+              <span>5 N/m (Soft)</span>
+              <span>200 N/m</span>
+              <span>400 N/m (Stiff)</span>
+            </div>
+          </div>
+
+          <!-- Mass Slider -->
+          <div class="space-y-1 mb-3">
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-300 font-medium">Attached Mass (m):</span>
+              <span id="mDisplay" class="font-mono text-amber-400 font-bold">1.00 kg</span>
+            </div>
+            <input type="range" id="mSlider" min="0.1" max="10.0" step="0.05" value="1.0" oninput="updateParam('m', this.value)" class="w-full">
+            <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+              <span>0.10 kg</span>
+              <span>5.00 kg</span>
+              <span>10.00 kg</span>
+            </div>
+          </div>
+
+          <!-- Damping Slider -->
+          <div class="space-y-1 mb-3">
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-300 font-medium">Viscous Damping (c):</span>
+              <span id="cDisplay" class="font-mono text-rose-400 font-bold">0.30 N·s/m</span>
+            </div>
+            <input type="range" id="cSlider" min="0" max="8.0" step="0.05" value="0.30" oninput="updateParam('c', this.value)" class="w-full">
+            <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+              <span>0.00 (Undamped)</span>
+              <span id="critDampHint">Critical: ~14.1 N·s/m</span>
+              <span>8.00 (Heavy)</span>
+            </div>
+          </div>
+
+          <!-- Rest Length Slider -->
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-300 font-medium">Unstretched Length (L₀):</span>
+              <span id="l0Display" class="font-mono text-emerald-400 font-bold">0.80 m</span>
+            </div>
+            <input type="range" id="l0Slider" min="0.4" max="1.5" step="0.05" value="0.8" oninput="updateParam('L0', this.value)" class="w-full">
+          </div>
+        </div>
+
+        <!-- External Driving Force & Resonance Module -->
+        <div class="glass-panel rounded-2xl p-4 border border-slate-800">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-purple-400 flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+              Periodic Driving Force (Resonance)
+            </h3>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="driverToggle" onchange="toggleDriver(this.checked)" class="sr-only peer">
+              <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+            </label>
+          </div>
+
+          <div id="driverControls" class="space-y-3 opacity-40 pointer-events-none transition-opacity">
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs">
+                <span class="text-slate-300 font-medium">Driving Amplitude (F₀):</span>
+                <span id="driveAmpDisplay" class="font-mono text-purple-400 font-bold">5.0 N</span>
+              </div>
+              <input type="range" id="driveAmpSlider" min="0" max="25" step="0.5" value="5.0" oninput="updateDriverParam('amp', this.value)" class="w-full">
+            </div>
+
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs">
+                <span class="text-slate-300 font-medium">Driving Frequency (f):</span>
+                <span id="driveFreqDisplay" class="font-mono text-purple-400 font-bold">1.13 Hz</span>
+              </div>
+              <input type="range" id="driveFreqSlider" min="0.1" max="4.0" step="0.02" value="1.13" oninput="updateDriverParam('freq', this.value)" class="w-full">
+              <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+                <span>0.10 Hz</span>
+                <button onclick="matchResonanceFreq()" class="text-purple-400 underline font-semibold hover:text-purple-300">Match Natural f₀</button>
+                <span>4.00 Hz</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= MODE 2: HOOKE'S LAW LAB PANEL ================= -->
+      <div id="panel-hooke" class="mode-panel space-y-4 hidden">
+        <div class="glass-panel rounded-2xl p-4 border border-slate-800">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-sky-400 mb-2">Static Weights Rack</h3>
+          <p class="text-xs text-slate-400 mb-3">Add precision calibrated standard weights to the hanger, let the system settle, and record extension data to determine $k$.</p>
+          
+          <!-- Standard Calibrated Weights Palette -->
+          <div class="grid grid-cols-4 gap-2 mb-4">
+            <button onclick="addHangerWeight(0.1)" class="p-2 rounded-xl bg-slate-800 hover:bg-sky-950 hover:border-sky-500/50 border border-slate-700 text-xs font-mono font-semibold transition text-slate-200 flex flex-col items-center">
+              <span>+100g</span>
+              <span class="text-[9px] text-slate-400 font-normal">0.98 N</span>
+            </button>
+            <button onclick="addHangerWeight(0.25)" class="p-2 rounded-xl bg-slate-800 hover:bg-sky-950 hover:border-sky-500/50 border border-slate-700 text-xs font-mono font-semibold transition text-slate-200 flex flex-col items-center">
+              <span>+250g</span>
+              <span class="text-[9px] text-slate-400 font-normal">2.45 N</span>
+            </button>
+            <button onclick="addHangerWeight(0.5)" class="p-2 rounded-xl bg-slate-800 hover:bg-sky-950 hover:border-sky-500/50 border border-slate-700 text-xs font-mono font-semibold transition text-slate-200 flex flex-col items-center">
+              <span>+500g</span>
+              <span class="text-[9px] text-slate-400 font-normal">4.90 N</span>
+            </button>
+            <button onclick="addHangerWeight(1.0)" class="p-2 rounded-xl bg-slate-800 hover:bg-sky-950 hover:border-sky-500/50 border border-slate-700 text-xs font-mono font-semibold transition text-slate-200 flex flex-col items-center">
+              <span>+1.0kg</span>
+              <span class="text-[9px] text-slate-400 font-normal">9.81 N</span>
+            </button>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div class="flex items-center gap-2 mb-4">
+            <button onclick="dampToEquilibrium()" class="flex-1 py-2 px-3 rounded-xl bg-indigo-600/80 hover:bg-indigo-500 text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 shadow-sm">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+              Settle to Equilibrium
+            </button>
+            <button onclick="clearHangerWeights()" class="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition">
+              Unload
+            </button>
+          </div>
+
+          <!-- Data Logger Trigger -->
+          <div class="flex items-center gap-2">
+            <button onclick="logHookeDataPoint()" class="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-950">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Record Data Point (&Delta;x, F)
+            </button>
+            <button onclick="clearHookeData()" class="p-2.5 rounded-xl bg-slate-800 hover:bg-rose-950 hover:text-rose-400 border border-slate-700 text-slate-400 transition" title="Clear Data Table">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Recorded Experimental Table & Regression Results -->
+        <div class="glass-panel rounded-2xl p-4 border border-slate-800">
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-400">Empirical Regression Fit</h4>
+            <button onclick="exportDataCSV()" class="text-[11px] text-sky-400 hover:underline font-mono flex items-center gap-1">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              Export CSV
+            </button>
+          </div>
+
+          <!-- Fit Metrics Banner -->
+          <div class="bg-lab-950 p-2.5 rounded-xl border border-slate-800 grid grid-cols-2 gap-2 text-xs font-mono mb-3">
+            <div>
+              <span class="text-slate-500 block text-[10px]">EXPERIMENTAL k:</span>
+              <span id="reg-k" class="text-emerald-400 font-bold text-sm">-- N/m</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block text-[10px]">CORRELATION R²:</span>
+              <span id="reg-r2" class="text-sky-400 font-bold text-sm">--</span>
+            </div>
+          </div>
+
+          <!-- Table Container -->
+          <div class="max-h-40 overflow-y-auto rounded-lg border border-slate-800">
+            <table class="w-full text-left text-[11px] font-mono">
+              <thead class="bg-slate-950/80 text-slate-400 sticky top-0">
+                <tr>
+                  <th class="p-1.5">#</th>
+                  <th class="p-1.5">Mass (kg)</th>
+                  <th class="p-1.5">Force (N)</th>
+                  <th class="p-1.5">&Delta;x (cm)</th>
+                  <th class="p-1.5">k_inst</th>
+                </tr>
+              </thead>
+              <tbody id="hookeTableBody" class="divide-y divide-slate-800/60 text-slate-300">
+                <tr>
+                  <td colspan="5" class="p-3 text-center text-slate-500 italic font-sans">No points logged yet. Hang weights and click "Record Data Point".</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= MODE 3: SERIES & PARALLEL PANEL ================= -->
+      <div id="panel-config" class="mode-panel space-y-4 hidden">
+        <div class="glass-panel rounded-2xl p-4 border border-slate-800">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-400 mb-2">Dual Spring Comparison Setup</h3>
+          <p class="text-xs text-slate-400 mb-4">Configure two distinct springs to directly observe side-by-side behavioral differences under Series vs. Parallel topologies.</p>
+
+          <!-- Spring 1 Constant Slider -->
+          <div class="space-y-1 mb-3">
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-300 font-medium">Spring 1 Constant (k₁):</span>
+              <span id="k1Display" class="font-mono text-indigo-400 font-bold">40.0 N/m</span>
+            </div>
+            <input type="range" id="k1Slider" min="10" max="300" step="5" value="40" oninput="updateConfigSpring('k1', this.value)" class="w-full">
+          </div>
+
+          <!-- Spring 2 Constant Slider -->
+          <div class="space-y-1 mb-4">
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-300 font-medium">Spring 2 Constant (k₂):</span>
+              <span id="k2Display" class="font-mono text-cyan-400 font-bold">60.0 N/m</span>
+            </div>
+            <input type="range" id="k2Slider" min="10" max="300" step="5" value="60" oninput="updateConfigSpring('k2', this.value)" class="w-full">
+          </div>
+
+          <!-- Config Math Cards -->
+          <div class="grid grid-cols-2 gap-3 font-mono text-xs">
+            <div class="bg-lab-950 p-3 rounded-xl border border-indigo-500/20">
+              <span class="text-indigo-400 font-bold block mb-1">PARALLEL</span>
+              <div class="text-[10px] text-slate-400">k_eq = k₁ + k₂</div>
+              <div id="kParallelText" class="text-white font-bold text-sm mt-1">100.0 N/m</div>
+              <div class="text-[10px] text-slate-500 mt-1">Stiffer configuration</div>
+            </div>
+            <div class="bg-lab-950 p-3 rounded-xl border border-cyan-500/20">
+              <span class="text-cyan-400 font-bold block mb-1">SERIES</span>
+              <div class="text-[10px] text-slate-400">1/k_eq = 1/k₁ + 1/k₂</div>
+              <div id="kSeriesText" class="text-white font-bold text-sm mt-1">24.0 N/m</div>
+              <div class="text-[10px] text-slate-500 mt-1">Softer configuration</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-panel rounded-2xl p-4 border border-slate-800">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">Simultaneous Test Load</h4>
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-300">Shared Test Mass (m):</span>
+              <span id="configMassDisplay" class="font-mono text-amber-400 font-bold">1.50 kg</span>
+            </div>
+            <input type="range" id="configMassSlider" min="0.2" max="6.0" step="0.1" value="1.5" oninput="updateConfigMass(this.value)" class="w-full">
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= MODE 4: MATERIAL YIELD & FATIGUE PANEL ================= -->
+      <div id="panel-yield" class="mode-panel space-y-4 hidden">
+        <div class="glass-panel rounded-2xl p-4 border border-slate-800">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-rose-400">Tensile Material Specification</h3>
+            <span id="materialStressState" class="text-[10px] px-2 py-0.5 rounded font-mono font-bold bg-emerald-950 text-emerald-400 border border-emerald-500/30">ELASTIC REGIME</span>
+          </div>
+          <p class="text-xs text-slate-400 mb-4">Pulling the mass past the Elastic Limit causes permanent plastic deformation. Exceeding Ultimate Tensile Strength fractures the spring.</p>
+
+          <!-- Material Preset Selector -->
+          <div class="mb-3">
+            <label class="text-xs text-slate-300 font-medium block mb-1">Spring Material:</label>
+            <select id="materialPresetSelect" onchange="applyMaterialPreset(this.value)" class="w-full bg-lab-950 text-slate-200 text-xs rounded-xl px-3 py-2 border border-slate-700 focus:outline-none">
+              <option value="music_wire">ASTM A228 High-Carbon Music Wire (Steel)</option>
+              <option value="stainless_302">AISI 302 Stainless Spring Steel</option>
+              <option value="phosphor_bronze">Phosphor Bronze (Corrosion-Resistant)</option>
+              <option value="aluminum">6061-T6 Aluminum Alloy (Low Yield)</option>
+            </select>
+          </div>
+
+          <!-- Yield Limit Slider -->
+          <div class="space-y-1 mb-3">
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-300 font-medium">Yield Strength Force (F_yield):</span>
+              <span id="yieldForceDisplay" class="font-mono text-amber-400 font-bold">45.0 N</span>
+            </div>
+            <input type="range" id="yieldSlider" min="15" max="150" step="5" value="45" oninput="updateYieldParam('yield', this.value)" class="w-full">
+            <div class="text-[10px] text-slate-500">Threshold where irreversible stretch starts accumulating.</div>
+          </div>
+
+          <!-- Ultimate Failure Limit Slider -->
+          <div class="space-y-1 mb-4">
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-300 font-medium">Ultimate Tensile Fracture (F_ult):</span>
+              <span id="ultForceDisplay" class="font-mono text-rose-400 font-bold">75.0 N</span>
+            </div>
+            <input type="range" id="ultSlider" min="20" max="220" step="5" value="75" oninput="updateYieldParam('ult', this.value)" class="w-full">
+            <div class="text-[10px] text-slate-500">Catastrophic failure point.</div>
+          </div>
+
+          <!-- Accumulated Plastic Strain Readout -->
+          <div class="bg-lab-950 p-3 rounded-xl border border-slate-800 space-y-1.5 font-mono text-xs">
+            <div class="flex justify-between">
+              <span class="text-slate-400">Permanent Stretch (&Delta;L_p):</span>
+              <span id="plasticStretchDisplay" class="text-rose-400 font-bold">0.00 cm</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Current Tensile Load:</span>
+              <span id="currentLoadDisplay" class="text-white font-bold">0.0 N</span>
+            </div>
+            <!-- Stress Load Bar -->
+            <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden flex border border-slate-800 mt-1">
+              <div id="stressBar" class="bg-emerald-400 h-full transition-all duration-75" style="width: 10%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Precision Photogate Period Timer & Stopwatch Widget -->
+      <div class="glass-panel rounded-2xl p-4 border border-slate-800">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Precision Period & Photogate Timer
+          </h3>
+          <span class="text-[10px] font-mono text-sky-400 bg-sky-950/80 px-2 py-0.5 rounded border border-sky-500/20">Auto Optical</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div class="bg-lab-950 p-3 rounded-xl border border-slate-800 text-center">
+            <span class="text-[10px] text-slate-400 font-mono block">MEASURED PERIOD (T_exp)</span>
+            <span id="gatePeriodVal" class="text-lg font-bold font-mono text-sky-400 tracking-tight">--.--- s</span>
+            <span id="gateFreqVal" class="text-[10px] text-slate-500 font-mono block mt-0.5">Freq: -- Hz</span>
+          </div>
+          <div class="bg-lab-950 p-3 rounded-xl border border-slate-800 text-center">
+            <span class="text-[10px] text-slate-400 font-mono block">THEORETICAL (T_theo)</span>
+            <span id="theoPeriodVal" class="text-lg font-bold font-mono text-emerald-400 tracking-tight">0.889 s</span>
+            <span id="errorPeriodVal" class="text-[10px] text-slate-400 font-mono block mt-0.5">&Delta;: 0.0%</span>
+          </div>
+        </div>
+
+        <!-- Manual Stopwatch & Lap Controls -->
+        <div class="flex items-center justify-between bg-lab-950 px-3 py-2 rounded-xl border border-slate-800 text-xs font-mono">
+          <div class="flex items-center gap-2">
+            <span class="text-slate-400">Stopwatch:</span>
+            <span id="stopwatchVal" class="text-white font-bold">00:00.00</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button id="swToggleBtn" onclick="toggleStopwatch()" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-sky-400 rounded text-[11px] font-sans font-semibold">Start</button>
+            <button onclick="resetStopwatch()" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[11px] font-sans">Reset</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- THEORY & FORMULAS MODAL -->
+  <div id="theoryModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="glass-panel w-full max-w-2xl rounded-2xl border border-slate-700 p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+          <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          Physics & Mathematical Theory Guide
+        </h2>
+        <button onclick="toggleModal('theoryModal')" class="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-xs text-slate-300 leading-relaxed font-sans">
+        <div>
+          <h4 class="font-bold text-sky-400 text-sm mb-1">1. Hooke's Law & Restoration Dynamics</h4>
+          <p>Robert Hooke (1678) established that within the elastic limit, the restoring force exerted by a spring is directly proportional to displacement from its rest position:</p>
+          <div class="bg-lab-950 p-2.5 rounded-lg border border-slate-800 font-mono text-sky-300 my-1.5 text-center">
+            F_s = -k · &Delta;x = -k · (y - L₀)
+          </div>
+          <p>Where $k$ is the spring stiffness constant (N/m) and $\Delta x$ is total extension. At static equilibrium in a gravitational field $g$:</p>
+          <div class="bg-lab-950 p-2 rounded-lg border border-slate-800 font-mono text-emerald-300 my-1 text-center">
+            &Delta;x_eq = (m · g) / k
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-amber-400 text-sm mb-1">2. Equation of Motion & Damped Oscillation</h4>
+          <p>Summing forces under gravity, viscous dashpot damping ($F_d = -c \cdot v$), and external driving force:</p>
+          <div class="bg-lab-950 p-2.5 rounded-lg border border-slate-800 font-mono text-amber-300 my-1.5 text-center">
+            m · (d²x/dt²) + c · (dx/dt) + k · x = F₀ · cos(&omega; t)
+          </div>
+          <p>The natural undamped angular frequency $\omega_0$ and period $T$ are given by:</p>
+          <div class="bg-lab-950 p-2 rounded-lg border border-slate-800 font-mono text-slate-200 my-1 text-center">
+            &omega;₀ = &radic;(k / m), &nbsp; T = 2&pi; &radic;(m / k), &nbsp; c_crit = 2 &radic;(k · m)
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-indigo-400 text-sm mb-1">3. Spring Combinations</h4>
+          <div class="grid grid-cols-2 gap-2 my-2 font-mono">
+            <div class="bg-lab-950 p-2 rounded border border-indigo-500/30">
+              <span class="text-indigo-300 font-bold block mb-1">Parallel Springs:</span>
+              k_eq = k₁ + k₂<br>
+              Stiffness adds together.
+            </div>
+            <div class="bg-lab-950 p-2 rounded border border-cyan-500/30">
+              <span class="text-cyan-300 font-bold block mb-1">Series Springs:</span>
+              1/k_eq = 1/k₁ + 1/k₂<br>
+              Compliance adds together.
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-rose-400 text-sm mb-1">4. Elastic Yield & Plasticity</h4>
+          <p>When tensile stress crosses the material's yield strength ($\sigma_y$), dislocations migrate through the atomic lattice, producing irreversible elongation ($\Delta L_p$). Beyond the ultimate tensile threshold ($F_{ult}$), necking culminates in catastrophic fracture.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Floating Toast Alert Container -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <script>
+    /* =========================================================================
+       LABORATORY SIMULATION CORE STATE & CONFIGURATION
+       ========================================================================= */
+    const STATE = {
+      mode: 'single', // 'single' | 'hooke' | 'config' | 'yield'
+      running: true,
+      timeScale: 1.0,
+      gravity: 9.80665, // m/s^2
+      
+      // Primary Oscillator Parameters
+      k: 50.0,      // N/m
+      m: 1.00,      // kg
+      c: 0.30,      // N*s/m (viscous damping)
+      L0: 0.80,     // m (natural rest length)
+      
+      // Position and velocity (y-coordinate along vertical axis in meters from anchor)
+      y: 0.80 + (1.0 * 9.80665 / 50.0), // Start near static equilibrium
+      v: 0.0,
+      a: 0.0,
+
+      // Energy bookkeeping (Joules)
+      E_kinetic: 0,
+      E_elastic: 0,
+      E_grav: 0,
+      E_thermal: 0,
+      
+      // Periodic Driving Force
+      driver: {
+        active: false,
+        amp: 5.0,     // N
+        freq: 1.13,   // Hz
+        phase: 0.0
+      },
+
+      // Overlays Visibility
+      overlays: {
+        ruler: true,
+        vectors: true,
+        guides: true,
+        photogate: true,
+      },
+
+      // Mode 2: Hooke's Law Static Weights & Data points
+      hooke: {
+        weightsOnHanger: [], // array of masses attached in kg
+        dataPoints: [],      // array of { mass, force, disp, k_inst }
+      },
+
+      // Mode 3: Series & Parallel side-by-side
+      config: {
+        k1: 40.0,
+        k2: 60.0,
+        mass: 1.5,
+        // State for Parallel setup
+        par: { y: 0.8 + (1.5*9.81)/100, v: 0, a: 0 },
+        // State for Series setup
+        ser: { y: 0.8 + (1.5*9.81)/24, v: 0, a: 0 },
+      },
+
+      // Mode 4: Yield & Fatigue
+      yield: {
+        material: 'music_wire',
+        f_yield: 45.0,  // N
+        f_ult: 75.0,    // N
+        plasticStretch: 0.0, // meters accumulated permanent extension
+        fractured: false,
+      },
+
+      // Precision Photogate & Period measurement
+      photogate: {
+        lastCrossTime: null,
+        lastCrossDir: null, // +1 moving down, -1 moving up
+        measuredPeriod: null,
+        measuredFreq: null,
+      },
+
+      // Stopwatch
+      stopwatch: {
+        running: false,
+        startTime: 0,
+        elapsed: 0,
+        timerId: null
+      },
+
+      // Oscilloscope Telemetry
+      scope: {
+        channel: 'xt', // 'xt', 'vt', 'phase', 'fx'
+        bufferSize: 320,
+        dataX: [],
+        dataV: [],
+        dataF: [],
+        dataExt: [],
+        timeStep: 0
+      },
+
+      // Drag interaction
+      drag: {
+        active: false,
+        targetMassIndex: null, // 0 for primary, 'par', 'ser'
+        offsetY: 0
+      },
+
+      // Coordinate scaling
+      pxPerMeter: 175, // pixels per physical meter
+      simAnchorY: 55,  // Y-coord in px of fixed ceiling beam
+      simAnchorX: 0    // will be computed dynamically
+    };
+
+    // Procedural Audio Engine
+    let audioCtx = null;
+    let isMuted = true;
+    let coilHumGain = null;
+    let coilHumOsc = null;
+
+    function initAudio() {
+      if (audioCtx) return;
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+
+        // Background gentle coil tension synth
+        coilHumOsc = audioCtx.createOscillator();
+        coilHumOsc.type = 'sine';
+        coilHumOsc.frequency.setValueAtTime(110, audioCtx.currentTime);
+
+        coilHumGain = audioCtx.createGain();
+        coilHumGain.gain.setValueAtTime(0, audioCtx.currentTime);
+
+        coilHumOsc.connect(coilHumGain);
+        coilHumGain.connect(audioCtx.destination);
+        coilHumOsc.start();
+      } catch (e) {
+        console.warn('Web Audio not supported or blocked', e);
+      }
+    }
+
+    function toggleAudio() {
+      if (!audioCtx) initAudio();
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      isMuted = !isMuted;
+      document.getElementById('soundIconOn').classList.toggle('hidden', isMuted);
+      document.getElementById('soundIconOff').classList.toggle('hidden', !isMuted);
+      showToast(isMuted ? 'Sound Muted' : 'Procedural Audio Synthesizer Active');
+    }
+
+    function playSnapSound() {
+      if (isMuted || !audioCtx) return;
+      try {
+        const now = audioCtx.currentTime;
+        // Twang snap burst
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.exponentialRampToValueAtTime(80, now + 0.35);
+
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.36);
+      } catch(e) {}
+    }
+
+    function playWeightClink() {
+      if (isMuted || !audioCtx) return;
+      try {
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(1800, now);
+        osc.frequency.exponentialRampToValueAtTime(400, now + 0.08);
+
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.1);
+      } catch(e) {}
+    }
+
+    function playPhotogateBeep() {
+      if (isMuted || !audioCtx) return;
+      try {
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(987.77, now); // B5 note
+
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.07);
+      } catch(e) {}
+    }
+
+    /* =========================================================================
+       PHYSICS INTEGRATION ENGINE: 4th-ORDER RUNGE-KUTTA (RK4)
+       ========================================================================= */
+
+    // Calculates acceleration given displacement y and velocity v for primary single spring
+    function calcAcceleration(y, v, t) {
+      if (STATE.yield.fractured) {
+        return STATE.gravity; // Free fall
+      }
+      
+      const effectiveL0 = STATE.L0 + STATE.yield.plasticStretch;
+      const extension = y - effectiveL0; // positive = stretched down
+      
+      // Hooke's Force: acts upwards (-y) when extended
+      const F_spring = -STATE.k * extension;
+      
+      // Gravity Force: acts downwards (+y)
+      const F_grav = STATE.m * STATE.gravity;
+      
+      // Viscous damping: acts opposite to velocity
+      const F_damp = -STATE.c * v;
+      
+      // External periodic driving force
+      let F_drive = 0;
+      if (STATE.driver.active) {
+        F_drive = STATE.driver.amp * Math.cos(2 * Math.PI * STATE.driver.freq * t);
+      }
+
+      const F_net = F_spring + F_grav + F_damp + F_drive;
+      return F_net / STATE.m;
+    }
+
+    // Step state via 4th-order Runge-Kutta
+    function rk4Step(dt, t) {
+      // Substepping for ultimate numerical stability with stiff springs
+      const subSteps = 6;
+      const subDt = dt / subSteps;
+
+      for (let s = 0; s < subSteps; s++) {
+        const currentT = t + s * subDt;
+        
+        // Mode 1, 2, 4 Single mass RK4
+        if (STATE.mode !== 'config') {
+          const y0 = STATE.y;
+          const v0 = STATE.v;
+
+          // k1
+          const a1 = calcAcceleration(y0, v0, currentT);
+          const dy1 = v0;
+
+          // k2
+          const y2 = y0 + 0.5 * subDt * dy1;
+          const v2 = v0 + 0.5 * subDt * a1;
+          const a2 = calcAcceleration(y2, v2, currentT + 0.5 * subDt);
+          const dy2 = v2;
+
+          // k3
+          const y3 = y0 + 0.5 * subDt * dy2;
+          const v3 = v0 + 0.5 * subDt * a2;
+          const a3 = calcAcceleration(y3, v3, currentT + 0.5 * subDt);
+          const dy3 = v3;
+
+          // k4
+          const y4 = y0 + subDt * dy3;
+          const v4 = v0 + subDt * a3;
+          const a4 = calcAcceleration(y4, v4, currentT + subDt);
+          const dy4 = v4;
+
+          STATE.y += (subDt / 6) * (dy1 + 2 * dy2 + 2 * dy3 + dy4);
+          STATE.v += (subDt / 6) * (a1 + 2 * a2 + 2 * a3 + a4);
+          STATE.a = calcAcceleration(STATE.y, STATE.v, currentT + subDt);
+
+          // Bound bottom boundary so mass doesn't fly off screen indefinitely
+          if (STATE.y > 4.5) {
+            STATE.y = 4.5;
+            STATE.v = -STATE.v * 0.2;
+          }
+
+          // Energy dissipation bookkeeping
+          const F_damping_curr = STATE.c * STATE.v;
+          STATE.E_thermal += Math.abs(F_damping_curr * STATE.v) * subDt;
+
+          // Mode 4: Yield and plastic deformation integration
+          if (STATE.mode === 'yield' && !STATE.yield.fractured) {
+            const ext = Math.max(0, STATE.y - (STATE.L0 + STATE.yield.plasticStretch));
+            const springForce = STATE.k * ext;
+            
+            // Check for plastic strain accumulation
+            if (springForce > STATE.yield.f_yield) {
+              const excessStress = springForce - STATE.yield.f_yield;
+              // rate of plastic creep proportional to excess stress
+              const dPlastic = (excessStress / STATE.k) * 0.4 * subDt;
+              STATE.yield.plasticStretch += dPlastic;
+            }
+
+            // Check for catastrophic fracture
+            if (springForce >= STATE.yield.f_ult) {
+              STATE.yield.fractured = true;
+              playSnapSound();
+              document.getElementById('fractureBanner').classList.remove('hidden');
+              showToast('💥 Spring fractured under extreme tensile stress!', 'error');
+            }
+          }
+
+        } else {
+          // Mode 3: Parallel & Series side-by-side simultaneous step
+          stepConfigSim(subDt);
+        }
+      }
+    }
+
+    function stepConfigSim(subDt) {
+      const g = STATE.gravity;
+      const m = STATE.config.mass;
+      const c = 0.25;
+
+      // PARALLEL: k_eq = k1 + k2
+      const k_par = STATE.config.k1 + STATE.config.k2;
+      const ext_par = STATE.config.par.y - STATE.L0;
+      const f_spring_par = -k_par * ext_par;
+      const f_net_par = f_spring_par + m * g - c * STATE.config.par.v;
+      const a_par = f_net_par / m;
+      STATE.config.par.v += a_par * subDt;
+      STATE.config.par.y += STATE.config.par.v * subDt;
+      STATE.config.par.a = a_par;
+
+      // SERIES: 1/k_eq = 1/k1 + 1/k2 => k_ser = (k1*k2)/(k1+k2)
+      const k_ser = (STATE.config.k1 * STATE.config.k2) / (STATE.config.k1 + STATE.config.k2);
+      // Dual spring natural length is 2 * L0
+      const totalL0_ser = STATE.L0 * 1.5; 
+      const ext_ser = STATE.config.ser.y - totalL0_ser;
+      const f_spring_ser = -k_ser * ext_ser;
+      const f_net_ser = f_spring_ser + m * g - c * STATE.config.ser.v;
+      const a_ser = f_net_ser / m;
+      STATE.config.ser.v += a_ser * subDt;
+      STATE.config.ser.y += STATE.config.ser.v * subDt;
+      STATE.config.ser.a = a_ser;
+    }
+
+    // Photogate zero-crossing detector at equilibrium position
+    function updatePhotogate(nowTime) {
+      const eqY = STATE.L0 + STATE.yield.plasticStretch + (STATE.m * STATE.gravity) / STATE.k;
+      const prevY = STATE.y - STATE.v * 0.016; // estimated previous pos
+      
+      // Detect crossing equilibrium downward (direction: +1)
+      if ((prevY <= eqY && STATE.y >= eqY) || (prevY >= eqY && STATE.y <= eqY)) {
+        const currentDir = STATE.v >= 0 ? 1 : -1;
+        
+        // We measure full period over same-direction zero crossings
+        if (currentDir === 1) {
+          if (STATE.photogate.lastCrossTime !== null) {
+            const period = (nowTime - STATE.photogate.lastCrossTime) / 1000;
+            // Filter noise / jitter
+            if (period > 0.15) {
+              STATE.photogate.measuredPeriod = period;
+              STATE.photogate.measuredFreq = 1 / period;
+              playPhotogateBeep();
+              updateTimerUI();
+            }
+          }
+          STATE.photogate.lastCrossTime = nowTime;
+        }
+      }
+    }
+
+    function updateTimerUI() {
+      const gateElem = document.getElementById('gatePeriodVal');
+      const gateFreqElem = document.getElementById('gateFreqVal');
+      const theoElem = document.getElementById('theoPeriodVal');
+      const errElem = document.getElementById('errorPeriodVal');
+
+      const theoPeriod = 2 * Math.PI * Math.sqrt(STATE.m / STATE.k);
+      theoElem.textContent = theoPeriod.toFixed(3) + ' s';
+
+      if (STATE.photogate.measuredPeriod) {
+        const expT = STATE.photogate.measuredPeriod;
+        gateElem.textContent = expT.toFixed(3) + ' s';
+        gateFreqElem.textContent = `Freq: ${(1/expT).toFixed(2)} Hz`;
+        const err = Math.abs((expT - theoPeriod) / theoPeriod) * 100;
+        errElem.textContent = `Δ: ${err.toFixed(1)}%`;
+        document.getElementById('hud-period').textContent = expT.toFixed(3) + ' s';
+      }
+    }
+
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    const scopeCanvas = document.getElementById('scopeCanvas');
+    const scopeCtx = scopeCanvas.getContext('2d');
+
+    function resizeCanvases() {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      STATE.simAnchorX = rect.width / 2;
+
+      const scopeRect = scopeCanvas.getBoundingClientRect();
+      scopeCanvas.width = scopeRect.width * dpr;
+      scopeCanvas.height = scopeRect.height * dpr;
+      scopeCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    window.addEventListener('resize', resizeCanvases);
+
+    /**
+     * Draws a realistic 3D-shaded helical spring
+     * @param {CanvasRenderingContext2D} c - Context
+     * @param {number} x - Center X
+     * @param {number} startY - Top anchor Y
+     * @param {number} endY - Bottom attachment Y
+     * @param {number} radius - Spring coil radius (pixels)
+     * @param {number} coils - Number of active helical turns
+     * @param {string} colorTheme - Base tint
+     * @param {boolean} broken - Draw severed coil fracture
+     */
+    function drawHelicalSpring(c, x, startY, endY, radius, coils, colorTheme = '#38bdf8', broken = false) {
+      c.save();
+      const length = endY - startY;
+
+      // Top straight mounting hook
+      c.beginPath();
+      c.moveTo(x, startY);
+      c.lineTo(x, startY + 14);
+      c.lineWidth = 4.5;
+      c.strokeStyle = '#94a3b8';
+      c.lineCap = 'round';
+      c.stroke();
+
+      if (broken) {
+        // Render sheared/fractured spring
+        const midY = startY + length * 0.45;
+        // Top half
+        c.beginPath();
+        c.moveTo(x, startY + 14);
+        c.lineTo(x - radius, startY + 30);
+        c.lineTo(x + radius, startY + 50);
+        c.lineTo(x - radius * 0.8, midY - 10);
+        c.lineWidth = 4;
+        c.strokeStyle = '#f43f5e';
+        c.stroke();
+
+        // Bottom severed piece hanging
+        c.beginPath();
+        c.moveTo(x + radius * 0.7, midY + 30);
+        c.lineTo(x - radius, midY + 55);
+        c.lineTo(x + radius, endY - 20);
+        c.lineTo(x, endY - 10);
+        c.lineTo(x, endY);
+        c.lineWidth = 4;
+        c.strokeStyle = '#f43f5e';
+        c.stroke();
+        c.restore();
+        return;
+      }
+
+      const springTop = startY + 14;
+      const springBottom = endY - 14;
+      const activeLength = Math.max(10, springBottom - springTop);
+      const points = coils * 36;
+      const stepY = activeLength / points;
+
+      // Render back coils (shadow layer)
+      c.lineWidth = 5;
+      c.lineCap = 'round';
+      c.lineJoin = 'round';
+
+      // Gradient for 3D metallic feel
+      const springGrad = c.createLinearGradient(x - radius, 0, x + radius, 0);
+      springGrad.addColorStop(0, '#0f2744');
+      springGrad.addColorStop(0.3, colorTheme);
+      springGrad.addColorStop(0.7, '#ffffff');
+      springGrad.addColorStop(1, '#0c4a6e');
+
+      c.beginPath();
+      c.moveTo(x, springTop);
+
+      for (let i = 0; i <= points; i++) {
+        const angle = (i / 36) * Math.PI * 2;
+        const px = x + Math.sin(angle) * radius;
+        const py = springTop + i * stepY;
+        c.lineTo(px, py);
+      }
+
+      c.lineTo(x, springBottom);
+      c.lineTo(x, endY);
+
+      c.strokeStyle = springGrad;
+      c.shadowColor = 'rgba(56, 189, 248, 0.35)';
+      c.shadowBlur = 8;
+      c.stroke();
+
+      // Clean coil highlights
+      c.lineWidth = 1.5;
+      c.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+      c.shadowBlur = 0;
+      c.stroke();
+
+      c.restore();
+    }
+
+    function drawMassHanger(c, x, y, mass, isGrabbed = false) {
+      c.save();
+      
+      // Top hook ring
+      c.beginPath();
+      c.arc(x, y + 8, 7, 0, Math.PI * 2);
+      c.strokeStyle = '#94a3b8';
+      c.lineWidth = 3.5;
+      c.stroke();
+
+      // Central steel rod
+      const rodHeight = 65;
+      c.beginPath();
+      c.moveTo(x, y + 15);
+      c.lineTo(x, y + rodHeight);
+      c.lineWidth = 4;
+      c.strokeStyle = '#64748b';
+      c.stroke();
+
+      // Bottom plate
+      const plateWidth = 56;
+      c.fillStyle = '#475569';
+      c.fillRect(x - plateWidth/2, y + rodHeight - 6, plateWidth, 8);
+
+      // Stacked Calibrated Weights visualization
+      // Represent mass dynamically with stacked brass/steel cylinders
+      const baseWeightHeight = 12;
+      const numWeights = Math.min(6, Math.max(1, Math.round(mass * 1.5)));
+      const weightWidth = 50;
+
+      for (let i = 0; i < numWeights; i++) {
+        const wy = y + rodHeight - 10 - (i * (baseWeightHeight + 2));
+        
+        // Weight cylinder gradient
+        const grad = c.createLinearGradient(x - weightWidth/2, 0, x + weightWidth/2, 0);
+        grad.addColorStop(0, '#b45309');
+        grad.addColorStop(0.3, '#fcd34d');
+        grad.addColorStop(0.7, '#f59e0b');
+        grad.addColorStop(1, '#78350f');
+
+        c.fillStyle = grad;
+        c.beginPath();
+        c.roundRect(x - weightWidth/2, wy - baseWeightHeight, weightWidth, baseWeightHeight, 3);
+        c.fill();
+        c.strokeStyle = '#451a03';
+        c.lineWidth = 1;
+        c.stroke();
+
+        // Slot cutout on weight
+        c.fillStyle = '#1e293b';
+        c.fillRect(x - 3, wy - baseWeightHeight, 6, baseWeightHeight);
+      }
+
+      // Mass Label Tag
+      c.fillStyle = '#0f172a';
+      c.strokeStyle = isGrabbed ? '#38bdf8' : '#334155';
+      c.lineWidth = 1.5;
+      c.beginPath();
+      c.roundRect(x - 28, y + rodHeight + 8, 56, 22, 6);
+      c.fill();
+      c.stroke();
+
+      c.fillStyle = isGrabbed ? '#38bdf8' : '#f8fafc';
+      c.font = 'bold 11px "JetBrains Mono", monospace';
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      c.fillText(`${mass.toFixed(2)} kg`, x, y + rodHeight + 19);
+
+      // Glow when dragging
+      if (isGrabbed) {
+        c.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+        c.lineWidth = 3;
+        c.beginPath();
+        c.arc(x, y + rodHeight / 2, 38, 0, Math.PI * 2);
+        c.stroke();
+      }
+
+      c.restore();
+    }
+
+    // Viscous Dashpot Damper rendering on side of mass
+    function drawDashpot(c, anchorX, anchorY, currentY, dampingValue) {
+      if (dampingValue <= 0.05) return;
+      c.save();
+      const x = anchorX - 85;
+      const cylinderTop = anchorY + 80;
+      const cylinderHeight = 110;
+      const cylinderWidth = 26;
+      const pistonY = Math.min(cylinderTop + cylinderHeight - 10, Math.max(cylinderTop + 10, cylinderTop + (currentY - (STATE.L0 * STATE.pxPerMeter)) * 0.35 + 30));
+
+      // Connecting arm from ceiling
+      c.strokeStyle = '#475569';
+      c.lineWidth = 3;
+      c.beginPath();
+      c.moveTo(anchorX, anchorY);
+      c.lineTo(x, anchorY);
+      c.lineTo(x, cylinderTop);
+      c.stroke();
+
+      // Cylinder fluid body (translucent oil)
+      c.fillStyle = 'rgba(30, 41, 59, 0.7)';
+      c.fillRect(x - cylinderWidth/2, cylinderTop, cylinderWidth, cylinderHeight);
+      c.strokeStyle = '#64748b';
+      c.lineWidth = 2;
+      c.strokeRect(x - cylinderWidth/2, cylinderTop, cylinderWidth, cylinderHeight);
+
+      // Viscous oil level
+      c.fillStyle = 'rgba(56, 189, 248, 0.15)';
+      c.fillRect(x - cylinderWidth/2 + 2, cylinderTop + 20, cylinderWidth - 4, cylinderHeight - 22);
+
+      // Piston head & rod connected to mass
+      c.fillStyle = '#94a3b8';
+      c.fillRect(x - (cylinderWidth - 6)/2, pistonY - 4, cylinderWidth - 6, 8);
+
+      c.beginPath();
+      c.moveTo(x, pistonY);
+      c.lineTo(x, currentY + 30);
+      c.lineTo(anchorX - 30, currentY + 30);
+      c.strokeStyle = '#94a3b8';
+      c.lineWidth = 2.5;
+      c.stroke();
+
+      // Damper label
+      c.font = '9px "JetBrains Mono", monospace';
+      c.fillStyle = '#64748b';
+      c.textAlign = 'center';
+      c.fillText('DASHPOT', x, cylinderTop - 6);
+
+      c.restore();
+    }
+
+    function drawRuler(c, canvasWidth, canvasHeight) {
+      if (!STATE.overlays.ruler) return;
+      c.save();
+      const rulerX = 40;
+      const topY = STATE.simAnchorY;
+      const bottomY = canvasHeight - 20;
+
+      // Ruler wood/metal background
+      c.fillStyle = '#1e293b';
+      c.fillRect(rulerX, topY, 32, bottomY - topY);
+      c.strokeStyle = '#475569';
+      c.lineWidth = 1.5;
+      c.strokeRect(rulerX, topY, 32, bottomY - topY);
+
+      // Ticks every cm (approx) and 10cm markers
+      const pxPerCm = STATE.pxPerMeter / 100;
+      const totalCm = Math.floor((bottomY - topY) / pxPerCm);
+
+      c.fillStyle = '#94a3b8';
+      c.font = '8px "JetBrains Mono", monospace';
+      c.textAlign = 'right';
+      c.textBaseline = 'middle';
+
+      for (let cm = 0; cm <= totalCm; cm += 2) {
+        const y = topY + cm * pxPerCm;
+        const isDeci = cm % 10 === 0;
+        const tickLength = isDeci ? 16 : (cm % 5 === 0 ? 10 : 6);
+
+        c.beginPath();
+        c.moveTo(rulerX + 32, y);
+        c.lineTo(rulerX + 32 - tickLength, y);
+        c.strokeStyle = isDeci ? '#38bdf8' : '#64748b';
+        c.lineWidth = isDeci ? 1.5 : 1;
+        c.stroke();
+
+        if (isDeci && cm > 0) {
+          c.fillText(`${cm}`, rulerX + 12, y);
+        }
+      }
+
+      // Unit tag
+      c.save();
+      c.translate(rulerX + 8, topY + 15);
+      c.rotate(-Math.PI / 2);
+      c.fillStyle = '#38bdf8';
+      c.font = 'bold 9px "JetBrains Mono", monospace';
+      c.fillText('CENTIMETERS (cm)', 0, 0);
+      c.restore();
+
+      c.restore();
+    }
+
+    function drawReferenceGuides(c, x, startY, currentMassY) {
+      if (!STATE.overlays.guides) return;
+      c.save();
+      c.setLineDash([4, 4]);
+
+      // 1. Natural Length L0 marker
+      const naturalY = startY + (STATE.L0 + STATE.yield.plasticStretch) * STATE.pxPerMeter;
+      c.strokeStyle = '#10b981';
+      c.lineWidth = 1.5;
+      c.beginPath();
+      c.moveTo(x - 90, naturalY);
+      c.lineTo(x + 130, naturalY);
+      c.stroke();
+
+      c.font = '10px "JetBrains Mono", monospace';
+      c.fillStyle = '#10b981';
+      c.textAlign = 'left';
+      c.fillText(`L₀ Natural: ${(STATE.L0 + STATE.yield.plasticStretch).toFixed(2)}m`, x + 65, naturalY - 5);
+
+      // 2. Static Equilibrium Line L_eq
+      const eqDisp = (STATE.m * STATE.gravity) / STATE.k;
+      const eqY = naturalY + eqDisp * STATE.pxPerMeter;
+      c.strokeStyle = '#f59e0b';
+      c.beginPath();
+      c.moveTo(x - 90, eqY);
+      c.lineTo(x + 130, eqY);
+      c.stroke();
+
+      c.fillStyle = '#f59e0b';
+      c.fillText(`L_eq Static: ${(STATE.L0 + STATE.yield.plasticStretch + eqDisp).toFixed(2)}m`, x + 65, eqY - 5);
+
+      // 3. Current Position Delta X line
+      c.strokeStyle = '#38bdf8';
+      c.setLineDash([2, 2]);
+      c.beginPath();
+      c.moveTo(x - 90, currentMassY);
+      c.lineTo(x + 55, currentMassY);
+      c.stroke();
+
+      c.restore();
+    }
+
+    function drawForceVectors(c, x, y, massY) {
+      if (!STATE.overlays.vectors) return;
+      c.save();
+      const originX = x + 35;
+      const originY = massY + 30; // Center of mass
+      const vectorScale = 1.8; // px per Newton
+
+      const effectiveL0 = STATE.L0 + STATE.yield.plasticStretch;
+      const ext = STATE.y - effectiveL0;
+      const f_spring = -STATE.k * ext;
+      const f_grav = STATE.m * STATE.gravity;
+      const f_damp = -STATE.c * STATE.v;
+      const f_net = f_spring + f_grav + f_damp;
+
+      // Spring Restoration Force Vector (Green)
+      drawArrow(c, originX, originY, originX, originY + f_spring * vectorScale, '#10b981', `Fs: ${Math.abs(f_spring).toFixed(1)}N`);
+
+      // Gravity Force Vector (Amber)
+      drawArrow(c, originX + 15, originY, originX + 15, originY + f_grav * vectorScale, '#f59e0b', `Fg: ${f_grav.toFixed(1)}N`);
+
+      // Net Force Vector (Cyan)
+      if (Math.abs(f_net) > 0.4) {
+        drawArrow(c, originX - 25, originY, originX - 25, originY + f_net * vectorScale, '#38bdf8', `Fnet: ${f_net.toFixed(1)}N`);
+      }
+
+      c.restore();
+    }
+
+    function drawArrow(c, fromX, fromY, toX, toY, color, label) {
+      const headlen = 8;
+      const dx = toX - fromX;
+      const dy = toY - fromY;
+      const angle = Math.atan2(dy, dx);
+      const len = Math.hypot(dx, dy);
+      if (len < 3) return;
+
+      c.strokeStyle = color;
+      c.fillStyle = color;
+      c.lineWidth = 2.5;
+
+      c.beginPath();
+      c.moveTo(fromX, fromY);
+      c.lineTo(toX, toY);
+      c.stroke();
+
+      c.beginPath();
+      c.moveTo(toX, toY);
+      c.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+      c.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+      c.closePath();
+      c.fill();
+
+      // Label
+      c.font = '9px "JetBrains Mono", monospace';
+      c.textAlign = 'left';
+      c.fillText(label, toX + 6, toY + 2);
+    }
+
+    function drawPhotogateSensor(c, x, eqY) {
+      if (!STATE.overlays.photogate) return;
+      c.save();
+      const sensorX = x - 55;
+      const sensorY = eqY - 12;
+
+      // Sensor U-bracket
+      c.fillStyle = '#1e1b4b';
+      c.strokeStyle = '#6366f1';
+      c.lineWidth = 1.5;
+      c.beginPath();
+      c.roundRect(sensorX - 16, sensorY, 18, 24, 4);
+      c.roundRect(sensorX + 90, sensorY, 18, 24, 4);
+      c.fill();
+      c.stroke();
+
+      // Laser Beam Line
+      c.setLineDash([3, 3]);
+      c.strokeStyle = '#ec4899';
+      c.lineWidth = 1.5;
+      c.shadowColor = '#ec4899';
+      c.shadowBlur = 6;
+      c.beginPath();
+      c.moveTo(sensorX + 2, eqY);
+      c.lineTo(sensorX + 90, eqY);
+      c.stroke();
+
+      // LED dot
+      c.fillStyle = '#ec4899';
+      c.beginPath();
+      c.arc(sensorX + 2, eqY, 3, 0, Math.PI * 2);
+      c.fill();
+
+      c.restore();
+    }
+
+    let lastTimestamp = performance.now();
+
+    function renderSimulation() {
+      const now = performance.now();
+      const dtReal = (now - lastTimestamp) / 1000;
+      lastTimestamp = now;
+
+      // Fixed dt step with user speed multiplier
+      if (STATE.running && !STATE.drag.active) {
+        const dt = Math.min(0.05, dtReal) * STATE.timeScale;
+        rk4Step(dt, now / 1000);
+        updatePhotogate(now);
+      }
+
+      // Clear main canvas
+      const width = canvas.width / (window.devicePixelRatio || 1);
+      const height = canvas.height / (window.devicePixelRatio || 1);
+      ctx.clearRect(0, 0, width, height);
+
+      // Top ceiling structural mounting girder
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(0, 0, width, STATE.simAnchorY);
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(0, 0, width, STATE.simAnchorY);
+
+      // Girder mechanical diagonal stripes
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < width; i += 24) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i + 24, STATE.simAnchorY);
+        ctx.stroke();
+      }
+
+      // Draw Ruler
+      drawRuler(ctx, width, height);
+
+      // Mode-specific visual presentation
+      if (STATE.mode !== 'config') {
+        // SINGLE OSCILLATOR / HOOKE / YIELD MODES
+        const anchorX = width * 0.48;
+        const currentMassY = STATE.simAnchorY + STATE.y * STATE.pxPerMeter;
+
+        // Draw Reference Guidelines
+        drawReferenceGuides(ctx, anchorX, STATE.simAnchorY, currentMassY);
+
+        // Draw Photogate at Equilibrium
+        const eqY = STATE.simAnchorY + (STATE.L0 + STATE.yield.plasticStretch + (STATE.m * STATE.gravity) / STATE.k) * STATE.pxPerMeter;
+        drawPhotogateSensor(ctx, anchorX, eqY);
+
+        // Draw Dashpot Damper
+        drawDashpot(ctx, anchorX, STATE.simAnchorY, currentMassY, STATE.c);
+
+        // Draw Helical Spring
+        const springRadius = 18;
+        const coilCount = 14;
+        const springColor = STATE.mode === 'yield' && STATE.yield.fractured ? '#f43f5e' : (STATE.mode === 'yield' ? '#fbbf24' : '#38bdf8');
+        drawHelicalSpring(ctx, anchorX, STATE.simAnchorY, currentMassY, springRadius, coilCount, springColor, STATE.yield.fractured);
+
+        // Draw Mass & Hanger
+        drawMassHanger(ctx, anchorX, currentMassY, STATE.m, STATE.drag.active);
+
+        // Draw Force Vectors
+        drawForceVectors(ctx, anchorX, STATE.simAnchorY, currentMassY);
+
+      } else {
+        // MODE 3: SERIES & PARALLEL SIDE-BY-SIDE
+        renderSeriesParallelCanvas(width, height);
+      }
+
+      // Telemetry & Scope update
+      updateTelemetryHUD();
+      updateEnergyCalculations();
+      updateScopeData();
+
+      requestAnimationFrame(renderSimulation);
+    }
+
+    function renderSeriesParallelCanvas(width, height) {
+      const leftX = width * 0.32;
+      const rightX = width * 0.65;
+      const m = STATE.config.mass;
+
+      // PARALLEL RIG (LEFT)
+      const parMassY = STATE.simAnchorY + STATE.config.par.y * STATE.pxPerMeter;
+      
+      // Parallel label
+      ctx.fillStyle = '#818cf8';
+      ctx.font = 'bold 12px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('PARALLEL CONFIGURATION (k_eq = k₁ + k₂)', leftX, STATE.simAnchorY + 24);
+
+      // Dual springs attached to horizontal crossbar
+      const barHalfW = 28;
+      drawHelicalSpring(ctx, leftX - barHalfW, STATE.simAnchorY, parMassY, 14, 12, '#818cf8');
+      drawHelicalSpring(ctx, leftX + barHalfW, STATE.simAnchorY, parMassY, 14, 12, '#38bdf8');
+
+      // Crossbar
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(leftX - barHalfW - 8, parMassY - 3, (barHalfW + 8) * 2, 6);
+
+      // Mass hanger
+      drawMassHanger(ctx, leftX, parMassY, m, false);
+
+      // SERIES RIG (RIGHT)
+      const totalL0_ser = STATE.L0 * 1.5;
+      const serMassY = STATE.simAnchorY + STATE.config.ser.y * STATE.pxPerMeter;
+      
+      // Series label
+      ctx.fillStyle = '#22d3ee';
+      ctx.font = 'bold 12px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('SERIES CONFIGURATION (1/k_eq = 1/k₁ + 1/k₂)', rightX, STATE.simAnchorY + 24);
+
+      // Intermediate junction between Spring 1 and Spring 2
+      // Tension is equal, extensions proportional to 1/k
+      const totalExtSer = Math.max(0.01, STATE.config.ser.y - totalL0_ser);
+      const k1 = STATE.config.k1;
+      const k2 = STATE.config.k2;
+      const ext1 = totalExtSer * (k2 / (k1 + k2));
+      const midY = STATE.simAnchorY + (STATE.L0 * 0.75 + ext1) * STATE.pxPerMeter;
+
+      drawHelicalSpring(ctx, rightX, STATE.simAnchorY, midY, 15, 10, '#818cf8');
+      
+      // Junction ring
+      ctx.beginPath();
+      ctx.arc(rightX, midY, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#f8fafc';
+      ctx.fill();
+
+      drawHelicalSpring(ctx, rightX, midY, serMassY, 15, 10, '#22d3ee');
+      drawMassHanger(ctx, rightX, serMassY, m, false);
+    }
+
+    function updateTelemetryHUD() {
+      const effectiveL0 = STATE.L0 + STATE.yield.plasticStretch;
+      const disp = (STATE.y - effectiveL0);
+      const dispCm = disp * 100;
+      const springForce = STATE.yield.fractured ? 0 : (-STATE.k * disp);
+
+      document.getElementById('hud-disp').textContent = `${dispCm >= 0 ? '+' : ''}${dispCm.toFixed(2)} cm`;
+      document.getElementById('hud-vel').textContent = `${STATE.v.toFixed(3)} m/s`;
+      document.getElementById('hud-acc').textContent = `${STATE.a.toFixed(2)} m/s²`;
+      document.getElementById('hud-force').textContent = `${springForce.toFixed(2)} N`;
+
+      // Update Yield Stress Readouts if in Yield Mode
+      if (STATE.mode === 'yield') {
+        const tensileLoad = Math.max(0, -springForce);
+        document.getElementById('currentLoadDisplay').textContent = `${tensileLoad.toFixed(1)} N`;
+        document.getElementById('plasticStretchDisplay').textContent = `${(STATE.yield.plasticStretch * 100).toFixed(2)} cm`;
+
+        const pct = Math.min(100, (tensileLoad / STATE.yield.f_ult) * 100);
+        const bar = document.getElementById('stressBar');
+        bar.style.width = `${pct}%`;
+
+        const stateLabel = document.getElementById('materialStressState');
+        if (STATE.yield.fractured) {
+          stateLabel.textContent = 'FRACTURED';
+          stateLabel.className = 'text-[10px] px-2 py-0.5 rounded font-mono font-bold bg-rose-950 text-rose-400 border border-rose-500/30';
+          bar.className = 'bg-rose-600 h-full';
+        } else if (tensileLoad > STATE.yield.f_yield) {
+          stateLabel.textContent = 'PLASTIC DEFORMATION';
+          stateLabel.className = 'text-[10px] px-2 py-0.5 rounded font-mono font-bold bg-amber-950 text-amber-400 border border-amber-500/30';
+          bar.className = 'bg-amber-500 h-full';
+        } else {
+          stateLabel.textContent = 'ELASTIC REGIME';
+          stateLabel.className = 'text-[10px] px-2 py-0.5 rounded font-mono font-bold bg-emerald-950 text-emerald-400 border border-emerald-500/30';
+          bar.className = 'bg-emerald-400 h-full';
+        }
+      }
+    }
+
+    function updateEnergyCalculations() {
+      const effectiveL0 = STATE.L0 + STATE.yield.plasticStretch;
+      const extension = STATE.y - effectiveL0;
+
+      // Kinetic: 1/2 m v^2
+      STATE.E_kinetic = 0.5 * STATE.m * STATE.v * STATE.v;
+
+      // Elastic Potential: 1/2 k x^2
+      STATE.E_elastic = STATE.yield.fractured ? 0 : (0.5 * STATE.k * extension * extension);
+
+      // Gravitational Potential: m g (y_max - y) relative to datum
+      const datumY = 3.5; // reference datum in meters
+      STATE.E_grav = Math.max(0, STATE.m * STATE.gravity * (datumY - STATE.y));
+
+      const totalE = STATE.E_kinetic + STATE.E_elastic + STATE.E_grav + STATE.E_thermal;
+
+      document.getElementById('totalEnergyText').textContent = `Total: ${totalE.toFixed(2)} J`;
+      document.getElementById('val-kinetic').textContent = `${STATE.E_kinetic.toFixed(1)} J`;
+      document.getElementById('val-elastic').textContent = `${STATE.E_elastic.toFixed(1)} J`;
+      document.getElementById('val-grav').textContent = `${STATE.E_grav.toFixed(1)} J`;
+      document.getElementById('val-thermal').textContent = `${STATE.E_thermal.toFixed(1)} J`;
+
+      // Percentage widths for stacked energy bar
+      const safeTotal = Math.max(0.1, totalE);
+      document.getElementById('bar-kinetic').style.width = `${(STATE.E_kinetic / safeTotal) * 100}%`;
+      document.getElementById('bar-elastic').style.width = `${(STATE.E_elastic / safeTotal) * 100}%`;
+      document.getElementById('bar-grav').style.width = `${(STATE.E_grav / safeTotal) * 100}%`;
+      document.getElementById('bar-thermal').style.width = `${(STATE.E_thermal / safeTotal) * 100}%`;
+    }
+
+    function updateScopeData() {
+      // Buffer values
+      const effectiveL0 = STATE.L0 + STATE.yield.plasticStretch;
+      const extension = STATE.y - effectiveL0;
+      const force = -STATE.k * extension;
+
+      STATE.scope.dataX.push(extension);
+      STATE.scope.dataV.push(STATE.v);
+      STATE.scope.dataF.push(force);
+      STATE.scope.dataExt.push(extension);
+
+      if (STATE.scope.dataX.length > STATE.scope.bufferSize) {
+        STATE.scope.dataX.shift();
+        STATE.scope.dataV.shift();
+        STATE.scope.dataF.shift();
+        STATE.scope.dataExt.shift();
+      }
+
+      renderScope();
+    }
+
+    function renderScope() {
+      const w = scopeCanvas.width / (window.devicePixelRatio || 1);
+      const h = scopeCanvas.height / (window.devicePixelRatio || 1);
+      scopeCtx.clearRect(0, 0, w, h);
+
+      // Grid lines
+      scopeCtx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
+      scopeCtx.lineWidth = 1;
+      // Horizontal center
+      scopeCtx.beginPath();
+      scopeCtx.moveTo(0, h / 2);
+      scopeCtx.lineTo(w, h / 2);
+      scopeCtx.stroke();
+
+      const ch = STATE.scope.channel;
+
+      if (ch === 'xt' || ch === 'vt') {
+        const data = ch === 'xt' ? STATE.scope.dataX : STATE.scope.dataV;
+        const color = ch === 'xt' ? '#38bdf8' : '#34d399';
+        
+        scopeCtx.beginPath();
+        const step = w / STATE.scope.bufferSize;
+        const scale = ch === 'xt' ? (h * 0.4) : (h * 0.15);
+
+        for (let i = 0; i < data.length; i++) {
+          const x = i * step;
+          const y = (h / 2) - data[i] * scale;
+          if (i === 0) scopeCtx.moveTo(x, y);
+          else scopeCtx.lineTo(x, y);
+        }
+
+        scopeCtx.strokeStyle = color;
+        scopeCtx.lineWidth = 2;
+        scopeCtx.shadowColor = color;
+        scopeCtx.shadowBlur = 6;
+        scopeCtx.stroke();
+        scopeCtx.shadowBlur = 0;
+
+      } else if (ch === 'phase') {
+        // Phase portrait: v vs x
+        scopeCtx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
+        // Vertical axis
+        scopeCtx.beginPath();
+        scopeCtx.moveTo(w / 2, 0);
+        scopeCtx.lineTo(w / 2, h);
+        scopeCtx.stroke();
+
+        const xData = STATE.scope.dataX;
+        const vData = STATE.scope.dataV;
+        const scaleX = w * 0.4;
+        const scaleV = h * 0.2;
+
+        scopeCtx.beginPath();
+        for (let i = 0; i < xData.length; i++) {
+          const px = (w / 2) + xData[i] * scaleX;
+          const py = (h / 2) - vData[i] * scaleV;
+          if (i === 0) scopeCtx.moveTo(px, py);
+          else scopeCtx.lineTo(px, py);
+        }
+
+        scopeCtx.strokeStyle = '#a855f7';
+        scopeCtx.lineWidth = 1.8;
+        scopeCtx.shadowColor = '#a855f7';
+        scopeCtx.shadowBlur = 8;
+        scopeCtx.stroke();
+        scopeCtx.shadowBlur = 0;
+
+      } else if (ch === 'fx') {
+        // Force vs Extension
+        scopeCtx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
+        scopeCtx.beginPath();
+        scopeCtx.moveTo(w / 2, 0);
+        scopeCtx.lineTo(w / 2, h);
+        scopeCtx.stroke();
+
+        const extData = STATE.scope.dataExt;
+        const fData = STATE.scope.dataF;
+        const scaleExt = w * 0.4;
+        const scaleF = h * 0.012;
+
+        scopeCtx.beginPath();
+        for (let i = 0; i < extData.length; i++) {
+          const px = (w / 2) + extData[i] * scaleExt;
+          const py = (h / 2) - fData[i] * scaleF;
+          if (i === 0) scopeCtx.moveTo(px, py);
+          else scopeCtx.lineTo(px, py);
+        }
+
+        scopeCtx.strokeStyle = '#f59e0b';
+        scopeCtx.lineWidth = 2;
+        scopeCtx.stroke();
+      }
+    }
+
+    function getCanvasCoordinates(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    canvas.addEventListener('mousedown', onPointerDown);
+    canvas.addEventListener('touchstart', onPointerDown, { passive: false });
+
+    window.addEventListener('mousemove', onPointerMove);
+    window.addEventListener('touchmove', onPointerMove, { passive: false });
+
+    window.addEventListener('mouseup', onPointerUp);
+    window.addEventListener('touchend', onPointerUp);
+
+    function onPointerDown(e) {
+      const pos = getCanvasCoordinates(e);
+      const width = canvas.width / (window.devicePixelRatio || 1);
+      const anchorX = width * 0.48;
+      const massY = STATE.simAnchorY + STATE.y * STATE.pxPerMeter + 35;
+
+      // Hit test radius for mass hanger
+      const dist = Math.hypot(pos.x - anchorX, pos.y - massY);
+      if (dist < 55) {
+        STATE.drag.active = true;
+        STATE.v = 0; // stop velocity while held
+        STATE.drag.offsetY = (pos.y - massY);
+        document.getElementById('dragHint').style.display = 'none';
+        if (e.cancelable) e.preventDefault();
+      }
+    }
+
+    function onPointerMove(e) {
+      if (!STATE.drag.active) return;
+      const pos = getCanvasCoordinates(e);
+      // Map canvas pixel Y to physical meters displacement
+      const targetPixelY = pos.y - STATE.drag.offsetY - 35;
+      const targetMeterY = Math.max(0.15, (targetPixelY - STATE.simAnchorY) / STATE.pxPerMeter);
+      
+      // Calculate instantaneous drag velocity
+      STATE.v = (targetMeterY - STATE.y) * 25;
+      STATE.y = targetMeterY;
+
+      if (e.cancelable) e.preventDefault();
+    }
+
+    function onPointerUp() {
+      if (STATE.drag.active) {
+        STATE.drag.active = false;
+        // Limit max release fling velocity
+        STATE.v = Math.max(-12, Math.min(12, STATE.v));
+      }
+    }
+
+    function addHangerWeight(massDelta) {
+      STATE.hooke.weightsOnHanger.push(massDelta);
+      STATE.m += massDelta;
+      document.getElementById('mSlider').value = STATE.m.toFixed(2);
+      document.getElementById('mDisplay').textContent = `${STATE.m.toFixed(2)} kg`;
+      playWeightClink();
+      showToast(`Added +${(massDelta*1000).toFixed(0)}g test weight`);
+    }
+
+    function clearHangerWeights() {
+      STATE.hooke.weightsOnHanger = [];
+      STATE.m = 0.50; // base hanger mass
+      document.getElementById('mSlider').value = STATE.m.toFixed(2);
+      document.getElementById('mDisplay').textContent = `${STATE.m.toFixed(2)} kg`;
+      dampToEquilibrium();
+      showToast('Hanger unloaded to baseline (0.50 kg)');
+    }
+
+    function dampToEquilibrium() {
+      const eqDisp = (STATE.m * STATE.gravity) / STATE.k;
+      STATE.y = STATE.L0 + STATE.yield.plasticStretch + eqDisp;
+      STATE.v = 0;
+      STATE.a = 0;
+    }
+
+    function logHookeDataPoint() {
+      // Calculate current static parameters
+      const force = STATE.m * STATE.gravity;
+      const effectiveL0 = STATE.L0 + STATE.yield.plasticStretch;
+      const dispMeters = Math.max(0.001, STATE.y - effectiveL0);
+      const dispCm = dispMeters * 100;
+      const k_inst = force / dispMeters;
+
+      const point = {
+        index: STATE.hooke.dataPoints.length + 1,
+        mass: STATE.m,
+        force: force,
+        dispCm: dispCm,
+        dispMeters: dispMeters,
+        k_inst: k_inst
+      };
+
+      STATE.hooke.dataPoints.push(point);
+      playWeightClink();
+      renderHookeTable();
+      computeLinearRegression();
+      showToast(`Point #${point.index} Logged: F=${force.toFixed(2)}N, Δx=${dispCm.toFixed(1)}cm`);
+    }
+
+    function renderHookeTable() {
+      const tbody = document.getElementById('hookeTableBody');
+      if (STATE.hooke.dataPoints.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-3 text-center text-slate-500 italic font-sans">No points logged yet. Hang weights and click "Record Data Point".</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = STATE.hooke.dataPoints.map(p => `
+        <tr class="hover:bg-slate-800/40 transition">
+          <td class="p-1.5 text-slate-400 font-bold">${p.index}</td>
+          <td class="p-1.5">${p.mass.toFixed(2)}</td>
+          <td class="p-1.5 text-sky-400">${p.force.toFixed(2)}</td>
+          <td class="p-1.5 text-emerald-400">${p.dispCm.toFixed(2)}</td>
+          <td class="p-1.5 text-amber-400 font-bold">${p.k_inst.toFixed(1)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function computeLinearRegression() {
+      const pts = STATE.hooke.dataPoints;
+      if (pts.length < 2) {
+        document.getElementById('reg-k').textContent = pts.length === 1 ? `${pts[0].k_inst.toFixed(1)} N/m` : '-- N/m';
+        document.getElementById('reg-r2').textContent = '--';
+        return;
+      }
+
+      // Linear regression: F = k * deltaX
+      let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0, sumYY = 0;
+      const n = pts.length;
+
+      for (let p of pts) {
+        const x = p.dispMeters;
+        const y = p.force;
+        sumX += x;
+        sumY += y;
+        sumXY += x * y;
+        sumXX += x * x;
+        sumYY += y * y;
+      }
+
+      // Slope k
+      const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+      
+      // Pearson Correlation R^2
+      const numerator = (n * sumXY - sumX * sumY);
+      const denominator = Math.sqrt((n * sumXX - sumX * sumX) * (n * sumYY - sumY * sumY));
+      const r = denominator !== 0 ? (numerator / denominator) : 1.0;
+      const r2 = Math.min(1.0, Math.max(0, r * r));
+
+      document.getElementById('reg-k').textContent = `${slope.toFixed(2)} N/m`;
+      document.getElementById('reg-r2').textContent = `${r2.toFixed(4)}`;
+    }
+
+    function clearHookeData() {
+      STATE.hooke.dataPoints = [];
+      renderHookeTable();
+      computeLinearRegression();
+      showToast('Cleared recorded data points');
+    }
+
+    function exportDataCSV() {
+      if (STATE.hooke.dataPoints.length === 0) {
+        showToast('No data to export. Log points first.', 'warning');
+        return;
+      }
+      let csv = 'Point,Mass_kg,Force_N,Displacement_cm,Displacement_m,k_inst_Nm\n';
+      STATE.hooke.dataPoints.forEach(p => {
+        csv += `${p.index},${p.mass.toFixed(3)},${p.force.toFixed(3)},${p.dispCm.toFixed(2)},${p.dispMeters.toFixed(4)},${p.k_inst.toFixed(2)}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `SpringLab_Hooke_Data_${Date.now()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('CSV Exported successfully!');
+    }
+
+    function setMode(modeName) {
+      STATE.mode = modeName;
+
+      // Update desktop tab buttons
+      ['single', 'hooke', 'config', 'yield'].forEach(m => {
+        const tab = document.getElementById(`tab-${m}`);
+        const tabM = document.getElementById(`tab-${m}-m`);
+        const panel = document.getElementById(`panel-${m}`);
+
+        if (m === modeName) {
+          tab.className = 'mode-tab px-3 py-1.5 rounded-lg transition-all text-sky-400 bg-sky-950/50 border border-sky-500/30 flex items-center gap-1.5 shadow-sm';
+          if (tabM) tabM.className = 'px-2.5 py-1 rounded text-sky-400 bg-sky-950/60 font-semibold';
+          if (panel) panel.classList.remove('hidden');
+        } else {
+          tab.className = 'mode-tab px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white flex items-center gap-1.5';
+          if (tabM) tabM.className = 'px-2.5 py-1 rounded text-slate-400';
+          if (panel) panel.classList.add('hidden');
+        }
+      });
+
+      // Reset any active state if switching modes
+      if (modeName === 'yield') {
+        STATE.yield.fractured = false;
+        STATE.yield.plasticStretch = 0;
+        document.getElementById('fractureBanner').classList.add('hidden');
+      }
+
+      dampToEquilibrium();
+      showToast(`Switched to ${modeName.toUpperCase()} Mode`);
+    }
+
+    function updateParam(param, val) {
+      val = parseFloat(val);
+      STATE[param] = val;
+      if (param === 'k') {
+        document.getElementById('kDisplay').textContent = `${val.toFixed(1)} N/m`;
+        const critD = 2 * Math.sqrt(STATE.k * STATE.m);
+        document.getElementById('critDampHint').textContent = `Critical: ~${critD.toFixed(1)} N·s/m`;
+      } else if (param === 'm') {
+        document.getElementById('mDisplay').textContent = `${val.toFixed(2)} kg`;
+        const critD = 2 * Math.sqrt(STATE.k * STATE.m);
+        document.getElementById('critDampHint').textContent = `Critical: ~${critD.toFixed(1)} N·s/m`;
+      } else if (param === 'c') {
+        document.getElementById('cDisplay').textContent = `${val.toFixed(2)} N·s/m`;
+      } else if (param === 'L0') {
+        document.getElementById('l0Display').textContent = `${val.toFixed(2)} m`;
+      }
+      updateTimerUI();
+    }
+
+    function updateConfigSpring(param, val) {
+      val = parseFloat(val);
+      STATE.config[param] = val;
+      if (param === 'k1') document.getElementById('k1Display').textContent = `${val.toFixed(1)} N/m`;
+      if (param === 'k2') document.getElementById('k2Display').textContent = `${val.toFixed(1)} N/m`;
+
+      const kPar = STATE.config.k1 + STATE.config.k2;
+      const kSer = (STATE.config.k1 * STATE.config.k2) / (STATE.config.k1 + STATE.config.k2);
+      document.getElementById('kParallelText').textContent = `${kPar.toFixed(1)} N/m`;
+      document.getElementById('kSeriesText').textContent = `${kSer.toFixed(1)} N/m`;
+    }
+
+    function updateConfigMass(val) {
+      STATE.config.mass = parseFloat(val);
+      document.getElementById('configMassDisplay').textContent = `${STATE.config.mass.toFixed(2)} kg`;
+    }
+
+    function updateYieldParam(param, val) {
+      val = parseFloat(val);
+      if (param === 'yield') {
+        STATE.yield.f_yield = val;
+        document.getElementById('yieldForceDisplay').textContent = `${val.toFixed(1)} N`;
+      } else if (param === 'ult') {
+        STATE.yield.f_ult = val;
+        document.getElementById('ultForceDisplay').textContent = `${val.toFixed(1)} N`;
+      }
+    }
+
+    function applyMaterialPreset(matKey) {
+      STATE.yield.material = matKey;
+      if (matKey === 'music_wire') {
+        STATE.yield.f_yield = 75;
+        STATE.yield.f_ult = 135;
+      } else if (matKey === 'stainless_302') {
+        STATE.yield.f_yield = 55;
+        STATE.yield.f_ult = 95;
+      } else if (matKey === 'phosphor_bronze') {
+        STATE.yield.f_yield = 35;
+        STATE.yield.f_ult = 60;
+      } else if (matKey === 'aluminum') {
+        STATE.yield.f_yield = 20;
+        STATE.yield.f_ult = 35;
+      }
+      document.getElementById('yieldSlider').value = STATE.yield.f_yield;
+      document.getElementById('yieldForceDisplay').textContent = `${STATE.yield.f_yield.toFixed(1)} N`;
+      document.getElementById('ultSlider').value = STATE.yield.f_ult;
+      document.getElementById('ultForceDisplay').textContent = `${STATE.yield.f_ult.toFixed(1)} N`;
+      showToast(`Material updated: ${matKey.replace('_', ' ').toUpperCase()}`);
+    }
+
+    function applyPreset(presetKey) {
+      if (presetKey === 'slinky') {
+        updateParam('k', 8);
+        updateParam('m', 0.25);
+        updateParam('c', 0.1);
+        updateParam('L0', 0.6);
+      } else if (presetKey === 'automotive') {
+        updateParam('k', 320);
+        updateParam('m', 4.5);
+        updateParam('c', 4.0);
+        updateParam('L0', 0.9);
+      } else if (presetKey === 'hairspring') {
+        updateParam('k', 12);
+        updateParam('m', 0.1);
+        updateParam('c', 0.02);
+        updateParam('L0', 0.45);
+      } else if (presetKey === 'critical') {
+        // Critical damping: c = 2 * sqrt(k * m)
+        const k = 60;
+        const m = 1.0;
+        updateParam('k', k);
+        updateParam('m', m);
+        updateParam('c', (2 * Math.sqrt(k * m)).toFixed(2));
+      } else if (presetKey === 'resonance') {
+        updateParam('k', 45);
+        updateParam('m', 1.0);
+        updateParam('c', 0.08); // low damping
+        document.getElementById('driverToggle').checked = true;
+        toggleDriver(true);
+        matchResonanceFreq();
+      } else if (presetKey === 'heavy') {
+        updateParam('k', 380);
+        updateParam('m', 8.0);
+        updateParam('c', 1.5);
+        updateParam('L0', 1.0);
+      }
+
+      // Sync slider UI controls
+      document.getElementById('kSlider').value = STATE.k;
+      document.getElementById('mSlider').value = STATE.m;
+      document.getElementById('cSlider').value = STATE.c;
+      document.getElementById('l0Slider').value = STATE.L0;
+
+      dampToEquilibrium();
+      showToast(`Preset Loaded: ${presetKey.toUpperCase()}`);
+    }
+
+    function toggleDriver(active) {
+      STATE.driver.active = active;
+      const ctrl = document.getElementById('driverControls');
+      if (active) {
+        ctrl.classList.remove('opacity-40', 'pointer-events-none');
+      } else {
+        ctrl.classList.add('opacity-40', 'pointer-events-none');
+      }
+    }
+
+    function updateDriverParam(param, val) {
+      val = parseFloat(val);
+      if (param === 'amp') {
+        STATE.driver.amp = val;
+        document.getElementById('driveAmpDisplay').textContent = `${val.toFixed(1)} N`;
+      } else if (param === 'freq') {
+        STATE.driver.freq = val;
+        document.getElementById('driveFreqDisplay').textContent = `${val.toFixed(2)} Hz`;
+      }
+    }
+
+    function matchResonanceFreq() {
+      // Natural angular frequency omega = sqrt(k/m), f0 = omega / (2*pi)
+      const f0 = Math.sqrt(STATE.k / STATE.m) / (2 * Math.PI);
+      STATE.driver.freq = parseFloat(f0.toFixed(2));
+      document.getElementById('driveFreqSlider').value = STATE.driver.freq;
+      document.getElementById('driveFreqDisplay').textContent = `${STATE.driver.freq.toFixed(2)} Hz`;
+      showToast(`Driver tuned to natural resonance: ${STATE.driver.freq} Hz`);
+    }
+
+    function setGravityPreset(val) {
+      if (val === 'custom') {
+        const customG = prompt('Enter custom gravitational acceleration (m/s²):', '9.81');
+        if (customG !== null && !isNaN(customG)) {
+          STATE.gravity = parseFloat(customG);
+        }
+      } else {
+        STATE.gravity = parseFloat(val);
+      }
+      showToast(`Gravity set to ${STATE.gravity.toFixed(2)} m/s²`);
+    }
+
+    function togglePlay() {
+      STATE.running = !STATE.running;
+      document.getElementById('playIcon').classList.toggle('hidden', STATE.running);
+      document.getElementById('pauseIcon').classList.toggle('hidden', !STATE.running);
+    }
+
+    function stepSimulation() {
+      STATE.running = false;
+      document.getElementById('playIcon').classList.remove('hidden');
+      document.getElementById('pauseIcon').classList.add('hidden');
+      rk4Step(0.02, performance.now() / 1000);
+      updateTelemetryHUD();
+      updateEnergyCalculations();
+      updateScopeData();
+    }
+
+    function resetSimulation() {
+      STATE.yield.fractured = false;
+      STATE.yield.plasticStretch = 0;
+      document.getElementById('fractureBanner').classList.add('hidden');
+      dampToEquilibrium();
+      STATE.v = 0;
+      STATE.a = 0;
+      STATE.E_thermal = 0;
+      STATE.photogate.lastCrossTime = null;
+      showToast('Simulation state reset');
+    }
+
+    function setTimeScale(scale) {
+      STATE.timeScale = parseFloat(scale);
+      showToast(`Simulation speed: ${scale}x`);
+    }
+
+    function toggleOverlay(name) {
+      STATE.overlays[name] = !STATE.overlays[name];
+      const btn = document.getElementById(`toggle${name.charAt(0).toUpperCase() + name.slice(1)}Btn`);
+      if (btn) {
+        btn.classList.toggle('opacity-50', !STATE.overlays[name]);
+      }
+    }
+
+    function setScopeChannel(channel) {
+      STATE.scope.channel = channel;
+      ['xt', 'vt', 'phase', 'fx'].forEach(ch => {
+        const btn = document.getElementById(`chan-${ch}`);
+        if (ch === channel) {
+          btn.className = 'scope-btn px-2.5 py-0.5 rounded text-sky-400 bg-sky-950/60 font-semibold';
+        } else {
+          btn.className = 'scope-btn px-2.5 py-0.5 rounded text-slate-400 hover:text-white';
+        }
+      });
+    }
+
+    function toggleStopwatch() {
+      const btn = document.getElementById('swToggleBtn');
+      if (STATE.stopwatch.running) {
+        clearInterval(STATE.stopwatch.timerId);
+        STATE.stopwatch.running = false;
+        btn.textContent = 'Start';
+        btn.className = 'px-2 py-1 bg-slate-800 hover:bg-slate-700 text-sky-400 rounded text-[11px] font-sans font-semibold';
+      } else {
+        STATE.stopwatch.startTime = performance.now() - STATE.stopwatch.elapsed;
+        STATE.stopwatch.running = true;
+        btn.textContent = 'Pause';
+        btn.className = 'px-2 py-1 bg-amber-600/80 hover:bg-amber-500 text-white rounded text-[11px] font-sans font-semibold';
+        STATE.stopwatch.timerId = setInterval(() => {
+          STATE.stopwatch.elapsed = performance.now() - STATE.stopwatch.startTime;
+          updateStopwatchDisplay();
+        }, 30);
+      }
+    }
+
+    function resetStopwatch() {
+      clearInterval(STATE.stopwatch.timerId);
+      STATE.stopwatch.running = false;
+      STATE.stopwatch.elapsed = 0;
+      document.getElementById('swToggleBtn').textContent = 'Start';
+      document.getElementById('swToggleBtn').className = 'px-2 py-1 bg-slate-800 hover:bg-slate-700 text-sky-400 rounded text-[11px] font-sans font-semibold';
+      updateStopwatchDisplay();
+    }
+
+    function updateStopwatchDisplay() {
+      const totalMs = Math.floor(STATE.stopwatch.elapsed);
+      const mins = Math.floor(totalMs / 60000);
+      const secs = Math.floor((totalMs % 60000) / 1000);
+      const centis = Math.floor((totalMs % 1000) / 10);
+      document.getElementById('stopwatchVal').textContent = 
+        `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(centis).padStart(2, '0')}`;
+    }
+
+    function toggleModal(id) {
+      const modal = document.getElementById(id);
+      modal.classList.toggle('hidden');
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      const borderColor = type === 'error' ? 'border-rose-500 text-rose-200' : 'border-sky-500/40 text-slate-200';
+      toast.className = `bg-lab-900/95 backdrop-blur-md px-3.5 py-2 rounded-xl border ${borderColor} text-xs font-mono shadow-2xl flex items-center gap-2 pointer-events-auto transition-all transform translate-y-2 opacity-0 duration-200`;
+      toast.innerHTML = `
+        <span class="w-1.5 h-1.5 rounded-full ${type === 'error' ? 'bg-rose-500' : 'bg-sky-400'}"></span>
+        <span>${message}</span>
+      `;
+
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 250);
+      }, 2600);
+    }
+
+    // Keyboard shortcuts (Space = Play/Pause, R = Reset)
+    window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        togglePlay();
+      } else if (e.code === 'KeyR') {
+        resetSimulation();
+      }
+    });
+
+    window.onload = function() {
+      resizeCanvases();
+      dampToEquilibrium();
+      updateTimerUI();
+      // Start main 60 FPS animation loop
+      requestAnimationFrame(renderSimulation);
+    };
+  </script>
+</body>
+</html>
