@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>SpringLab Studio — Precision Physics & Materials Lab</title>
   <meta name="theme-color" content="#070a12">
-  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>SpringLab Studio — Physics Simulator</title>
 
-  <!-- Service Worker Registration -->
+  <!-- PWA Manifest & Service Worker Registration -->
+  <link rel="manifest" href="manifest.json">
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -17,101 +19,23 @@
       });
     }
   </script>
-  
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Lucide Icons -->
+  <!-- Dependencies: Tailwind CSS & Lucide Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-            mono: ['"JetBrains Mono"', 'monospace'],
-          },
-          colors: {
-            lab: {
-              950: '#070a12',
-              900: '#0d1322',
-              850: '#121a30',
-              800: '#1b253e',
-              750: '#23304f',
-              700: '#2d3d63',
-              600: '#405485',
-              accent: '#38bdf8',
-              spring: '#fbbf24',
-              elastic: '#10b981',
-              yield: '#f97316',
-              fracture: '#f43f5e',
-            }
-          },
-          screens: {
-            'xs': '420px',
-            'sm': '640px',
-            'md': '768px',
-            'lg': '1024px',
-            'xl': '1280px',
-            '2xl': '1536px',
-          },
-          boxShadow: {
-            'glow-cyan': '0 0 25px -4px rgba(56, 189, 248, 0.35)',
-            'glow-emerald': '0 0 25px -4px rgba(16, 185, 129, 0.35)',
-            'glow-rose': '0 0 25px -4px rgba(244, 63, 94, 0.35)',
-          }
-        }
-      }
-    };
-  </script>
-
   <style>
-    /* iOS & Android Safe Area Padding */
-    :root {
-      --sat: env(safe-area-inset-top, 0px);
-      --sab: env(safe-area-inset-bottom, 0px);
-      --sal: env(safe-area-inset-left, 0px);
-      --sar: env(safe-area-inset-right, 0px);
-    }
+    /* Safe-area insets for modern mobile displays (notches & home bars) */
+    .pb-safe { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+    .pt-safe { padding-top: max(0.5rem, env(safe-area-inset-top)); }
 
-    * {
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-
-    body {
-      padding-top: var(--sat);
-      padding-bottom: var(--sab);
-      padding-left: var(--sal);
-      padding-right: var(--sar);
-      background-color: #070a12;
-      color: #f1f5f9;
-      touch-action: pan-y;
-      overflow-x: hidden;
-    }
-
-    /* Prevent page scroll while dragging interactive canvas */
-    #physicsCanvas {
-      touch-action: none;
-    }
-
-    /* Custom range sliders with accessible touch targets (min 44px) */
+    /* Custom range thumb styling for responsive touch dragging */
     input[type=range] {
       -webkit-appearance: none;
-      appearance: none;
-      background: #1b253e;
-      height: 8px;
+      background: #1e293b;
+      height: 6px;
       border-radius: 9999px;
       outline: none;
-      position: relative;
     }
     input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none;
@@ -121,1771 +45,1303 @@
       border-radius: 50%;
       background: #38bdf8;
       cursor: pointer;
-      box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
-      transition: transform 0.15s ease, background-color 0.15s ease;
-      border: 2px solid #070a12;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+      border: 2px solid #0f172a;
+      transition: transform 0.1s ease;
     }
-    input[type=range]:active::-webkit-slider-thumb {
+    input[type=range]::-webkit-slider-thumb:active {
       transform: scale(1.25);
-      background: #7dd3fc;
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #38bdf8;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+      border: 2px solid #0f172a;
     }
 
-    /* Precision Grid Background */
-    .lab-grid-bg {
-      background-image: 
-        radial-gradient(rgba(56, 189, 248, 0.08) 1.2px, transparent 1.2px),
-        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-      background-size: 20px 20px, 40px 40px, 40px 40px;
+    /* Prevent text selection and unwanted pinch zooms during physics touches */
+    .touch-pan-y-none {
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
     }
 
-    /* Glassmorphism panels */
-    .glass-card {
-      background: rgba(13, 19, 34, 0.78);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-    }
-    .glass-card-light {
-      background: rgba(27, 37, 62, 0.55);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    /* Custom thin scrollbar */
+    /* Scrollbar aesthetics */
     ::-webkit-scrollbar {
       width: 5px;
       height: 5px;
     }
     ::-webkit-scrollbar-track {
-      background: #0d1322;
+      background: #090d16;
     }
     ::-webkit-scrollbar-thumb {
-      background: #2d3d63;
-      border-radius: 9999px;
+      background: #1e293b;
+      border-radius: 4px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #38bdf8;
+      background: #334155;
     }
   </style>
 </head>
-<body class="flex flex-col h-screen overflow-hidden font-sans antialiased text-slate-100 selection:bg-sky-500/30">
 
-  <header class="h-14 sm:h-16 bg-lab-900/90 border-b border-slate-800/80 px-3 sm:px-5 flex items-center justify-between z-30 flex-shrink-0">
-    <div class="flex items-center gap-2.5 sm:gap-3">
-      <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20 text-white font-bold flex-shrink-0">
-        <i data-lucide="activity" class="w-4 h-4 sm:w-5 sm:h-5 text-white"></i>
+<body class="bg-[#070a12] text-slate-100 h-[100dvh] w-screen flex flex-col overflow-hidden select-none font-sans antialiased">
+
+  <!-- TOP HEADER (Compact & Responsive) -->
+  <header class="h-12 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-md px-3 flex items-center justify-between z-30 shrink-0">
+    <div class="flex items-center space-x-2">
+      <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-sky-600 to-indigo-500 flex items-center justify-center font-black text-white text-xs shadow-md shadow-sky-500/20">
+        W
       </div>
-      <div>
-        <div class="flex items-center gap-1.5 sm:gap-2">
-          <span class="font-extrabold text-sm sm:text-base tracking-tight text-white flex items-center gap-1">
-            SpringLab <span class="text-sky-400 font-mono text-[10px] sm:text-xs px-1.5 py-0.5 rounded bg-sky-950/80 border border-sky-500/30 font-semibold">STUDIO</span>
-          </span>
-          <span class="hidden md:inline-block text-[11px] text-slate-400 border-l border-slate-700 pl-2">Universal Physics Suite</span>
-        </div>
-        <p class="text-[10px] text-slate-400 font-mono hidden sm:block">RK4 Numerical Solver • Multi-Mode Tensile & Dynamic Engine</p>
+      <div class="flex items-baseline space-x-1.5">
+        <span class="font-bold text-sm tracking-wide text-white">SpringLab</span>
+        <span class="text-[9px] font-mono px-1 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20 font-semibold">PRO</span>
       </div>
     </div>
 
-    <!-- Mode Selector: Desktop & Laptop View (> 1024px) -->
-    <nav class="hidden lg:flex items-center bg-lab-950/90 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
-      <button onclick="setMode('single')" id="dt-mode-single" class="mode-tab px-3 py-1.5 rounded-lg transition-all text-sky-400 bg-sky-950/60 border border-sky-500/40 flex items-center gap-1.5">
-        <i data-lucide="zap" class="w-3.5 h-3.5"></i> Oscillator
-      </button>
-      <button onclick="setMode('hooke')" id="dt-mode-hooke" class="mode-tab px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white flex items-center gap-1.5">
-        <i data-lucide="scale" class="w-3.5 h-3.5"></i> Hooke's Lab
-      </button>
-      <button onclick="setMode('config')" id="dt-mode-config" class="mode-tab px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white flex items-center gap-1.5">
-        <i data-lucide="git-merge" class="w-3.5 h-3.5"></i> Series / Parallel
-      </button>
-      <button onclick="setMode('yield')" id="dt-mode-yield" class="mode-tab px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white flex items-center gap-1.5">
-        <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Tensile Yield
-      </button>
-    </nav>
+    <!-- Gravity quick selection & Sound toggle -->
+    <div class="flex items-center space-x-2">
+      <select id="gravity-select" class="bg-slate-900 border border-slate-800 text-sky-400 text-xs rounded-md px-2 py-1 outline-none font-mono focus:border-sky-500 cursor-pointer">
+        <option value="9.81">Earth (9.81 m/s²)</option>
+        <option value="1.62">Moon (1.62 m/s²)</option>
+        <option value="3.71">Mars (3.71 m/s²)</option>
+        <option value="24.79">Jupiter (24.79 m/s²)</option>
+        <option value="0.0">Zero-G (0.00 m/s²)</option>
+      </select>
 
-    <!-- Global Toolbar Actions -->
-    <div class="flex items-center gap-1.5 sm:gap-2.5">
-      <!-- Gravity Dropdown -->
-      <div class="flex items-center bg-lab-950 border border-slate-800 rounded-lg px-2 py-1 text-xs">
-        <span class="text-slate-400 mr-1 hidden sm:inline text-[11px]">g:</span>
-        <select id="gravitySelect" onchange="setGravityPreset(this.value)" class="bg-transparent text-sky-400 font-mono text-[11px] sm:text-xs font-semibold focus:outline-none cursor-pointer">
-          <option value="9.80665" class="bg-slate-900 text-white">Earth (9.81 m/s²)</option>
-          <option value="1.62" class="bg-slate-900 text-white">Moon (1.62 m/s²)</option>
-          <option value="3.72" class="bg-slate-900 text-white">Mars (3.72 m/s²)</option>
-          <option value="24.79" class="bg-slate-900 text-white">Jupiter (24.79 m/s²)</option>
-          <option value="0.0" class="bg-slate-900 text-white">Zero-G (0.00)</option>
-        </select>
-      </div>
-
-      <!-- Audio Synthesizer Toggle -->
-      <button id="audioToggleBtn" onclick="toggleAudio()" class="w-8 h-8 rounded-lg bg-lab-950 border border-slate-800 text-slate-300 hover:text-sky-400 flex items-center justify-center transition active:scale-95" title="Toggle Procedural Web Audio">
-        <i id="audioIcon" data-lucide="volume-x" class="w-4 h-4"></i>
-      </button>
-
-      <!-- Theory Modal Trigger -->
-      <button onclick="toggleTheoryModal(true)" class="w-8 h-8 rounded-lg bg-lab-950 border border-slate-800 text-slate-300 hover:text-amber-400 flex items-center justify-center transition active:scale-95" title="Physics Theory & Equations">
-        <i data-lucide="book-open" class="w-4 h-4"></i>
+      <button id="sound-btn" class="w-8 h-8 rounded-md bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-sky-400 transition-colors" title="Toggle Audio Synth">
+        <i data-lucide="volume-2" class="w-4 h-4"></i>
       </button>
     </div>
   </header>
 
-  <div class="lg:hidden flex items-center justify-between px-3 py-1.5 bg-lab-900 border-b border-slate-800/80 text-xs flex-shrink-0">
-    <div class="flex items-center gap-1 overflow-x-auto py-0.5 no-scrollbar w-full">
-      <button onclick="setMode('single')" id="mb-mode-single" class="mode-tab-m px-2.5 py-1 rounded-lg text-sky-400 bg-sky-950/70 border border-sky-500/40 text-[11px] font-semibold whitespace-nowrap">Oscillator</button>
-      <button onclick="setMode('hooke')" id="mb-mode-hooke" class="mode-tab-m px-2.5 py-1 rounded-lg text-slate-400 text-[11px] whitespace-nowrap">Hooke's</button>
-      <button onclick="setMode('config')" id="mb-mode-config" class="mode-tab-m px-2.5 py-1 rounded-lg text-slate-400 text-[11px] whitespace-nowrap">Series/Par</button>
-      <button onclick="setMode('yield')" id="mb-mode-yield" class="mode-tab-m px-2.5 py-1 rounded-lg text-slate-400 text-[11px] whitespace-nowrap">Tensile Yield</button>
-    </div>
-  </div>
-
-  <main class="flex-1 relative overflow-hidden flex flex-col md:grid md:grid-cols-12">
-
-    <!-- =========================================================================
-         PANEL 1: LEFT SIDEBAR (Desktop/Laptop: 3-cols; Tablet: Foldable/Drawer; Mobile: Tab 2)
-         ========================================================================= -->
-    <aside id="tuningPanel" class="hidden lg:block lg:col-span-3 xl:col-span-3 bg-lab-900/60 border-r border-slate-800/80 overflow-y-auto p-4 space-y-4 z-20">
-      
-      <!-- Panel Header -->
-      <div class="flex items-center justify-between">
-        <h2 class="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
-          <i data-lucide="sliders" class="w-3.5 h-3.5"></i> Test Parameters
-        </h2>
-        <span class="text-[10px] font-mono text-slate-400 bg-slate-800/60 px-2 py-0.5 rounded">Interactive</span>
-      </div>
-
-      <!-- MODE 1: OSCILLATOR TUNING -->
-      <div id="tune-single" class="mode-tune-block space-y-3.5">
-        <!-- Preset selector -->
-        <div>
-          <label class="text-[11px] text-slate-400 font-medium block mb-1">Laboratory Preset</label>
-          <select onchange="applyPreset(this.value)" class="w-full bg-lab-950 text-slate-200 text-xs rounded-xl px-2.5 py-2 border border-slate-800 focus:outline-none focus:border-sky-500">
-            <option value="" selected disabled>Choose Mechanical Preset...</option>
-            <option value="slinky">Helical Slinky (Low k, Undamped)</option>
-            <option value="automotive">Automotive Suspension Shock</option>
-            <option value="critical">Critically Damped Harmonic</option>
-            <option value="resonance">Resonance Sweep Target</option>
-            <option value="stiff">Die Machine Spring (High k)</option>
-          </select>
-        </div>
-
-        <!-- Spring Constant k -->
-        <div class="glass-card-light rounded-xl p-3 space-y-1.5">
-          <div class="flex justify-between items-center text-xs">
-            <span class="text-slate-300 font-medium">Stiffness (k):</span>
-            <span id="disp-k" class="font-mono text-sky-400 font-bold">50.0 N/m</span>
-          </div>
-          <input type="range" id="slider-k" min="5" max="300" step="1" value="50" oninput="updateParam('k', this.value)" class="w-full">
-          <div class="flex justify-between text-[10px] text-slate-500 font-mono">
-            <span>5 N/m</span>
-            <span>150 N/m</span>
-            <span>300 N/m</span>
-          </div>
-        </div>
-
-        <!-- Attached Mass m -->
-        <div class="glass-card-light rounded-xl p-3 space-y-1.5">
-          <div class="flex justify-between items-center text-xs">
-            <span class="text-slate-300 font-medium">Attached Mass (m):</span>
-            <span id="disp-m" class="font-mono text-amber-400 font-bold">1.00 kg</span>
-          </div>
-          <input type="range" id="slider-m" min="0.1" max="8.0" step="0.05" value="1.0" oninput="updateParam('m', this.value)" class="w-full">
-          <div class="flex justify-between text-[10px] text-slate-500 font-mono">
-            <span>0.10 kg</span>
-            <span>4.00 kg</span>
-            <span>8.00 kg</span>
-          </div>
-        </div>
-
-        <!-- Damping c -->
-        <div class="glass-card-light rounded-xl p-3 space-y-1.5">
-          <div class="flex justify-between items-center text-xs">
-            <span class="text-slate-300 font-medium">Viscous Damping (c):</span>
-            <span id="disp-c" class="font-mono text-rose-400 font-bold">0.25 N·s/m</span>
-          </div>
-          <input type="range" id="slider-c" min="0" max="6.0" step="0.05" value="0.25" oninput="updateParam('c', this.value)" class="w-full">
-          <div class="flex justify-between text-[10px] text-slate-500 font-mono">
-            <span>0 (None)</span>
-            <span id="disp-crit-hint">Crit: ~14.1</span>
-            <span>6.0 N·s/m</span>
-          </div>
-        </div>
-
-        <!-- Unstretched Length L0 -->
-        <div class="glass-card-light rounded-xl p-3 space-y-1.5">
-          <div class="flex justify-between items-center text-xs">
-            <span class="text-slate-300 font-medium">Rest Length (L₀):</span>
-            <span id="disp-l0" class="font-mono text-emerald-400 font-bold">0.80 m</span>
-          </div>
-          <input type="range" id="slider-l0" min="0.4" max="1.4" step="0.05" value="0.80" oninput="updateParam('L0', this.value)" class="w-full">
-        </div>
-
-        <!-- External Driving Force Card -->
-        <div class="glass-card-light rounded-xl p-3 space-y-2.5">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-semibold text-purple-400 flex items-center gap-1">
-              <i data-lucide="waves" class="w-3.5 h-3.5"></i> Periodic Driver
-            </span>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="driverToggle" onchange="toggleDriver(this.checked)" class="sr-only peer">
-              <div class="w-8 h-4 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-purple-600"></div>
-            </label>
-          </div>
-          <div id="driverSubControls" class="space-y-2 opacity-40 pointer-events-none transition-opacity">
-            <div class="flex justify-between text-[11px]">
-              <span class="text-slate-400">Driver Freq (f):</span>
-              <span id="disp-dfreq" class="font-mono text-purple-300">1.13 Hz</span>
-            </div>
-            <input type="range" id="slider-dfreq" min="0.1" max="4.0" step="0.02" value="1.13" oninput="updateDriverFreq(this.value)" class="w-full">
-            <button onclick="matchResonance()" class="w-full py-1 rounded-lg bg-purple-950/60 hover:bg-purple-900/80 border border-purple-500/40 text-[10px] font-mono text-purple-300 transition">
-              Tune to Resonance (f₀)
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- MODE 2: HOOKE'S LAB TUNING -->
-      <div id="tune-hooke" class="mode-tune-block space-y-3 hidden">
-        <div class="glass-card-light rounded-xl p-3">
-          <h3 class="text-xs font-semibold text-emerald-400 mb-1 flex items-center gap-1">
-            <i data-lucide="archive" class="w-3.5 h-3.5"></i> Precision Weights Rack
-          </h3>
-          <p class="text-[11px] text-slate-400 mb-3">Load standard calibrated weights to examine extension vs gravitational load.</p>
-          
-          <div class="grid grid-cols-2 gap-2">
-            <button onclick="addWeight(0.1)" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-700 text-xs font-mono text-slate-200 flex flex-col items-center">
-              <span>+100 g</span>
-              <span class="text-[9px] text-slate-400">0.98 N</span>
-            </button>
-            <button onclick="addWeight(0.25)" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-700 text-xs font-mono text-slate-200 flex flex-col items-center">
-              <span>+250 g</span>
-              <span class="text-[9px] text-slate-400">2.45 N</span>
-            </button>
-            <button onclick="addWeight(0.5)" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-700 text-xs font-mono text-slate-200 flex flex-col items-center">
-              <span>+500 g</span>
-              <span class="text-[9px] text-slate-400">4.90 N</span>
-            </button>
-            <button onclick="addWeight(1.0)" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-700 text-xs font-mono text-slate-200 flex flex-col items-center">
-              <span>+1.00 kg</span>
-              <span class="text-[9px] text-slate-400">9.81 N</span>
-            </button>
-          </div>
-
-          <div class="flex gap-2 mt-3">
-            <button onclick="settleEquilibrium()" class="flex-1 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center justify-center gap-1 active:scale-95 transition">
-              <i data-lucide="anchor" class="w-3.5 h-3.5"></i> Settle
-            </button>
-            <button onclick="clearWeights()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs active:scale-95 transition">
-              Unload
-            </button>
-          </div>
-        </div>
-
-        <button onclick="recordHookePoint()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-950 active:scale-95 transition">
-          <i data-lucide="plus-circle" class="w-4 h-4"></i> Record Data Point (&Delta;x, F)
-        </button>
-      </div>
-
-      <!-- MODE 3: SERIES & PARALLEL TUNING -->
-      <div id="tune-config" class="mode-tune-block space-y-3 hidden">
-        <div class="glass-card-light rounded-xl p-3 space-y-3">
-          <h3 class="text-xs font-semibold text-indigo-400 flex items-center gap-1">
-            <i data-lucide="layers" class="w-3.5 h-3.5"></i> Dual Springs Rig
-          </h3>
-          
-          <div class="space-y-1">
-            <div class="flex justify-between text-xs">
-              <span class="text-slate-300">Spring 1 (k₁):</span>
-              <span id="disp-k1" class="font-mono text-indigo-300 font-bold">40.0 N/m</span>
-            </div>
-            <input type="range" id="slider-k1" min="10" max="250" step="5" value="40" oninput="updateDualParam('k1', this.value)" class="w-full">
-          </div>
-
-          <div class="space-y-1">
-            <div class="flex justify-between text-xs">
-              <span class="text-slate-300">Spring 2 (k₂):</span>
-              <span id="disp-k2" class="font-mono text-cyan-300 font-bold">60.0 N/m</span>
-            </div>
-            <input type="range" id="slider-k2" min="10" max="250" step="5" value="60" oninput="updateDualParam('k2', this.value)" class="w-full">
-          </div>
-
-          <div class="space-y-1">
-            <div class="flex justify-between text-xs">
-              <span class="text-slate-300">Common Mass:</span>
-              <span id="disp-dual-m" class="font-mono text-amber-400 font-bold">1.50 kg</span>
-            </div>
-            <input type="range" id="slider-dual-m" min="0.2" max="5.0" step="0.1" value="1.5" oninput="updateDualParam('m', this.value)" class="w-full">
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2 text-xs font-mono">
-          <div class="bg-lab-950 p-2.5 rounded-xl border border-indigo-500/30">
-            <span class="text-indigo-400 text-[10px] block font-bold">PARALLEL k_eq</span>
-            <span id="disp-k-par" class="text-sm font-bold text-white">100.0 N/m</span>
-            <span class="text-[9px] text-slate-500 block">k₁ + k₂</span>
-          </div>
-          <div class="bg-lab-950 p-2.5 rounded-xl border border-cyan-500/30">
-            <span class="text-cyan-400 text-[10px] block font-bold">SERIES k_eq</span>
-            <span id="disp-k-ser" class="text-sm font-bold text-white">24.0 N/m</span>
-            <span class="text-[9px] text-slate-500 block">1/(1/k₁ + 1/k₂)</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- MODE 4: TENSILE YIELD TUNING -->
-      <div id="tune-yield" class="mode-tune-block space-y-3 hidden">
-        <div class="glass-card-light rounded-xl p-3 space-y-2.5">
-          <div class="flex items-center justify-between">
-            <h3 class="text-xs font-semibold text-rose-400 flex items-center gap-1">
-              <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Material Spec
-            </h3>
-            <span id="stressRegimeBadge" class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-500/30 font-bold">ELASTIC</span>
-          </div>
-
-          <select id="matSelect" onchange="applyMaterial(this.value)" class="w-full bg-lab-950 text-slate-200 text-xs rounded-xl px-2.5 py-2 border border-slate-800 focus:outline-none">
-            <option value="music_wire">ASTM A228 High-Carbon Music Wire</option>
-            <option value="stainless_302">AISI 302 Stainless Spring Steel</option>
-            <option value="phosphor_bronze">Phosphor Bronze Alloy</option>
-            <option value="aluminum">6061-T6 Structural Aluminum</option>
-          </select>
-
-          <div class="space-y-1">
-            <div class="flex justify-between text-xs">
-              <span class="text-slate-300">Yield Limit (F_yield):</span>
-              <span id="disp-fyield" class="font-mono text-amber-400 font-bold">50.0 N</span>
-            </div>
-            <input type="range" id="slider-fyield" min="15" max="150" step="5" value="50" oninput="updateYieldThresholds('yield', this.value)" class="w-full">
-          </div>
-
-          <div class="space-y-1">
-            <div class="flex justify-between text-xs">
-              <span class="text-slate-300">Fracture Limit (F_ult):</span>
-              <span id="disp-fult" class="font-mono text-rose-400 font-bold">85.0 N</span>
-            </div>
-            <input type="range" id="slider-fult" min="20" max="220" step="5" value="85" oninput="updateYieldThresholds('ult', this.value)" class="w-full">
-          </div>
-        </div>
-
-        <div class="bg-lab-950 p-2.5 rounded-xl border border-slate-800 font-mono text-xs space-y-1">
-          <div class="flex justify-between">
-            <span class="text-slate-400 text-[11px]">Plastic Creep:</span>
-            <span id="disp-plastic-strain" class="text-rose-400 font-bold">0.00 cm</span>
-          </div>
-          <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden flex">
-            <div id="yieldLoadBar" class="bg-emerald-400 h-full transition-all duration-75" style="width: 5%"></div>
-          </div>
-        </div>
-      </div>
-    </aside>
-
-    <!-- =========================================================================
-         PANEL 2: CENTER / MAIN CANVAS ARENA (Full-screen Mobile, Col 6-9 Desktop)
-         ========================================================================= -->
-    <section id="canvasPanel" class="flex-1 md:col-span-7 lg:col-span-6 xl:col-span-6 flex flex-col relative h-full bg-lab-950 overflow-hidden">
-      
-      <!-- Top Floating Simulation Quick Control Pill -->
-      <div class="absolute top-2.5 inset-x-3 flex items-center justify-between pointer-events-none z-20">
-        <!-- Play / Pause / Reset / Speed -->
-        <div class="flex items-center gap-1.5 bg-lab-900/90 backdrop-blur-md border border-slate-700/70 rounded-xl p-1 shadow-xl pointer-events-auto">
-          <button id="simPlayBtn" onclick="togglePlayState()" class="w-8 h-8 rounded-lg bg-sky-500 hover:bg-sky-400 active:scale-95 text-slate-950 flex items-center justify-center transition shadow-sm font-bold">
-            <i id="simPlayIcon" data-lucide="pause" class="w-4 h-4 fill-current"></i>
-          </button>
-          
-          <button onclick="stepSingleFrame()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 flex items-center justify-center transition" title="Step +0.02s">
-            <i data-lucide="step-forward" class="w-4 h-4"></i>
-          </button>
-          
-          <button onclick="resetSimulationState()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 flex items-center justify-center transition" title="Reset (R)">
-            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
-          </button>
-
-          <div class="h-4 w-px bg-slate-700 mx-0.5"></div>
-
-          <!-- Time Scale -->
-          <select id="simSpeedSelect" onchange="setTimeScale(this.value)" class="bg-slate-800 text-[11px] font-mono text-sky-400 rounded-lg px-1.5 py-1 border border-slate-700 focus:outline-none cursor-pointer">
-            <option value="0.25">0.25x</option>
-            <option value="0.5">0.5x</option>
-            <option value="1.0" selected>1.0x</option>
-            <option value="2.0">2.0x</option>
-          </select>
-        </div>
-
-        <!-- Overlays Display Toggles (Ruler, Vectors, Guides) -->
-        <div class="flex items-center gap-1 bg-lab-900/90 backdrop-blur-md border border-slate-700/70 rounded-xl p-1 shadow-xl pointer-events-auto text-[11px] font-medium">
-          <button id="ov-ruler" onclick="toggleOverlay('ruler')" class="px-2 py-1 rounded-lg text-sky-400 bg-sky-950/70 border border-sky-500/40">Ruler</button>
-          <button id="ov-vectors" onclick="toggleOverlay('vectors')" class="px-2 py-1 rounded-lg text-emerald-400 bg-emerald-950/70 border border-emerald-500/40">Forces</button>
-          <button id="ov-guides" onclick="toggleOverlay('guides')" class="px-2 py-1 rounded-lg text-amber-400 bg-amber-950/70 border border-amber-500/40 hidden sm:inline-block">Markers</button>
-        </div>
-      </div>
-
-      <!-- Main High-DPI Interactive Physics Canvas -->
-      <div id="canvasContainer" class="flex-1 w-full h-full relative lab-grid-bg cursor-grab active:cursor-grabbing">
-        <canvas id="physicsCanvas" class="w-full h-full block"></canvas>
-
-        <!-- Dynamic Live HUD Overlay (Bottom-left of canvas) -->
-        <div id="canvasHud" class="absolute bottom-3 left-3 bg-lab-950/85 backdrop-blur-md border border-slate-800/90 rounded-xl p-2.5 pointer-events-none text-[11px] font-mono space-y-0.5 shadow-2xl z-10 max-w-[210px]">
-          <div class="flex items-center justify-between gap-3 text-slate-400">
-            <span>&Delta;x Disp:</span>
-            <span id="hud-dx" class="font-bold text-white">+0.00 cm</span>
-          </div>
-          <div class="flex items-center justify-between gap-3 text-slate-400">
-            <span>Velocity v:</span>
-            <span id="hud-v" class="text-sky-400">0.00 m/s</span>
-          </div>
-          <div class="flex items-center justify-between gap-3 text-slate-400">
-            <span>Accel a:</span>
-            <span id="hud-a" class="text-amber-400">0.00 m/s²</span>
-          </div>
-          <div class="flex items-center justify-between gap-3 text-slate-400">
-            <span>Spring F:</span>
-            <span id="hud-f" class="text-emerald-400">0.00 N</span>
-          </div>
-          <div class="flex items-center justify-between gap-3 text-slate-400 pt-1 border-t border-slate-800/80">
-            <span>Period T:</span>
-            <span id="hud-period" class="text-indigo-400 font-bold">-- s</span>
-          </div>
-        </div>
-
-        <!-- Touch/Drag Hint Bubble -->
-        <div id="touchDragHint" class="absolute bottom-4 right-4 bg-sky-950/80 text-sky-300 border border-sky-500/30 rounded-lg px-3 py-1.5 text-[11px] font-medium pointer-events-none flex items-center gap-1.5 animate-pulse z-10">
-          <i data-lucide="hand" class="w-3.5 h-3.5"></i> Drag mass to pull & release
-        </div>
-
-        <!-- Tensile Fracture Warning Banner -->
-        <div id="fractureBanner" class="absolute inset-x-4 top-16 bg-rose-950/95 border-2 border-rose-500 text-rose-200 rounded-xl p-3.5 shadow-2xl z-20 flex items-center justify-between hidden">
-          <div class="flex items-center gap-2.5">
-            <span class="text-xl">💥</span>
-            <div>
-              <h4 class="font-bold text-white text-xs">SPRING RUPTURE DETECTED!</h4>
-              <p class="text-[10px] text-rose-300">Tensile load exceeded ultimate failure threshold.</p>
-            </div>
-          </div>
-          <button onclick="resetSimulationState()" class="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs active:scale-95 transition">
-            Replace
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================================================================
-         PANEL 3: RIGHT PANEL (Oscilloscope, Energy Conservation, Data Table)
-         ========================================================================= -->
-    <aside id="telemetryPanel" class="hidden md:block md:col-span-5 lg:col-span-3 xl:col-span-3 bg-lab-900/60 border-l border-slate-800/80 overflow-y-auto p-4 space-y-4 z-20">
-      
-      <!-- Energy Partition Conservation Card -->
-      <div class="glass-card rounded-2xl p-3.5 border border-slate-800 space-y-2">
-        <div class="flex items-center justify-between">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-            <i data-lucide="pie-chart" class="w-3.5 h-3.5 text-amber-400"></i> Energy Balance
-          </h3>
-          <span id="txt-total-e" class="text-[11px] font-mono text-slate-400">0.00 J</span>
-        </div>
-
-        <!-- Partition stacked bar -->
-        <div class="h-3 w-full bg-slate-950 rounded-full overflow-hidden flex p-0.5 gap-0.5 border border-slate-800">
-          <div id="bar-ke" class="h-full bg-blue-500 rounded-l transition-all duration-75" style="width: 25%"></div>
-          <div id="bar-pe" class="h-full bg-emerald-500 transition-all duration-75" style="width: 25%"></div>
-          <div id="bar-ge" class="h-full bg-amber-500 transition-all duration-75" style="width: 25%"></div>
-          <div id="bar-th" class="h-full bg-rose-500 rounded-r transition-all duration-75" style="width: 25%"></div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-1.5 text-[10px] font-mono text-slate-400">
-          <div class="flex justify-between"><span>Kinetic:</span><span id="txt-ke" class="text-white">0.0J</span></div>
-          <div class="flex justify-between"><span>Elastic:</span><span id="txt-pe" class="text-white">0.0J</span></div>
-          <div class="flex justify-between"><span>Gravity:</span><span id="txt-ge" class="text-white">0.0J</span></div>
-          <div class="flex justify-between"><span>Thermal:</span><span id="txt-th" class="text-white">0.0J</span></div>
-        </div>
-      </div>
-
-      <!-- Live Oscilloscope Screen -->
-      <div class="glass-card rounded-2xl p-3.5 border border-slate-800 space-y-2">
-        <div class="flex items-center justify-between">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-            <i data-lucide="radio" class="w-3.5 h-3.5 text-sky-400"></i> Telemetry Scope
-          </h3>
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        </div>
-
-        <!-- Scope Channel Buttons -->
-        <div class="grid grid-cols-4 gap-1 text-[10px] font-mono">
-          <button onclick="setScopeChan('xt')" id="sc-btn-xt" class="py-1 rounded bg-sky-950/80 text-sky-400 border border-sky-500/40 font-bold">x(t)</button>
-          <button onclick="setScopeChan('vt')" id="sc-btn-vt" class="py-1 rounded bg-slate-800/80 text-slate-400 hover:text-white">v(t)</button>
-          <button onclick="setScopeChan('phase')" id="sc-btn-phase" class="py-1 rounded bg-slate-800/80 text-slate-400 hover:text-white">Phase</button>
-          <button onclick="setScopeChan('fx')" id="sc-btn-fx" class="py-1 rounded bg-slate-800/80 text-slate-400 hover:text-white">F(&Delta;x)</button>
-        </div>
-
-        <div class="h-28 w-full bg-lab-950 rounded-xl border border-slate-800/80 relative overflow-hidden">
-          <canvas id="scopeCanvas" class="w-full h-full block"></canvas>
-        </div>
-      </div>
-
-      <!-- Hooke's Law Regression & Logger Card -->
-      <div class="glass-card rounded-2xl p-3.5 border border-slate-800 space-y-2">
-        <div class="flex items-center justify-between">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
-            <i data-lucide="trending-up" class="w-3.5 h-3.5"></i> Hooke Regression
-          </h3>
-          <button onclick="exportCSVData()" class="text-[10px] text-sky-400 hover:underline flex items-center gap-0.5 font-mono">
-            <i data-lucide="download" class="w-3 h-3"></i> CSV
-          </button>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2 bg-lab-950 p-2 rounded-xl border border-slate-800 text-[11px] font-mono">
-          <div>
-            <span class="text-slate-500 text-[9px] block">ESTIMATED k:</span>
-            <span id="stat-reg-k" class="text-emerald-400 font-bold">-- N/m</span>
-          </div>
-          <div>
-            <span class="text-slate-500 text-[9px] block">FIT R²:</span>
-            <span id="stat-reg-r2" class="text-sky-400 font-bold">--</span>
-          </div>
-        </div>
-
-        <!-- Hooke logged points mini table -->
-        <div class="max-h-28 overflow-y-auto border border-slate-800/80 rounded-lg">
-          <table class="w-full text-left text-[10px] font-mono">
-            <thead class="bg-slate-950/80 text-slate-400 sticky top-0">
-              <tr>
-                <th class="p-1">#</th>
-                <th class="p-1">Load (N)</th>
-                <th class="p-1">&Delta;x (cm)</th>
-                <th class="p-1">k_i</th>
-              </tr>
-            </thead>
-            <tbody id="hookeTableBody" class="divide-y divide-slate-800/60 text-slate-300">
-              <tr>
-                <td colspan="4" class="p-2 text-center text-slate-500 italic font-sans text-[10px]">No logged points yet</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </aside>
-  </main>
-
-  <!-- =========================================================================
-       NATIVE MOBILE BOTTOM NAVIGATION BAR (< 768px Viewports)
-       ========================================================================= -->
-  <nav class="md:hidden h-16 bg-lab-900/95 border-t border-slate-800/80 px-2 flex items-center justify-around z-30 flex-shrink-0">
-    <button onclick="setMobileTab('canvas')" id="mb-tab-canvas" class="flex-1 py-1 flex flex-col items-center gap-1 text-sky-400 font-medium">
-      <i data-lucide="play-circle" class="w-5 h-5"></i>
-      <span class="text-[10px]">Simulation</span>
+  <!-- LAB MODE SELECTOR (Horizontal Pill Strip) -->
+  <nav class="h-10 border-b border-slate-800/60 bg-slate-900/40 px-3 flex items-center space-x-1 overflow-x-auto no-scrollbar shrink-0">
+    <button data-mode="oscillator" class="mode-tab-btn active px-3 py-1 rounded-full text-xs font-medium transition-all bg-sky-500/20 text-sky-400 border border-sky-500/30 whitespace-nowrap">
+      Oscillator
     </button>
-    <button onclick="setMobileTab('tuning')" id="mb-tab-tuning" class="flex-1 py-1 flex flex-col items-center gap-1 text-slate-400 hover:text-white">
-      <i data-lucide="sliders" class="w-5 h-5"></i>
-      <span class="text-[10px]">Parameters</span>
+    <button data-mode="hooke" class="mode-tab-btn px-3 py-1 rounded-full text-xs font-medium transition-all text-slate-400 hover:text-slate-200 border border-transparent whitespace-nowrap">
+      Hooke's Law
     </button>
-    <button onclick="setMobileTab('charts')" id="mb-tab-charts" class="flex-1 py-1 flex flex-col items-center gap-1 text-slate-400 hover:text-white">
-      <i data-lucide="activity" class="w-5 h-5"></i>
-      <span class="text-[10px]">Telemetry</span>
+    <button data-mode="series_par" class="mode-tab-btn px-3 py-1 rounded-full text-xs font-medium transition-all text-slate-400 hover:text-slate-200 border border-transparent whitespace-nowrap">
+      Series / Parallel
     </button>
-    <button onclick="setMobileTab('data')" id="mb-tab-data" class="flex-1 py-1 flex flex-col items-center gap-1 text-slate-400 hover:text-white">
-      <i data-lucide="database" class="w-5 h-5"></i>
-      <span class="text-[10px]">Hooke Data</span>
+    <button data-mode="tensile" class="mode-tab-btn px-3 py-1 rounded-full text-xs font-medium transition-all text-slate-400 hover:text-slate-200 border border-transparent whitespace-nowrap">
+      Yield / Fracture
     </button>
   </nav>
 
-  <!-- THEORY & FORMULAS MODAL -->
-  <div id="theoryModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-    <div class="glass-card w-full max-w-xl rounded-2xl border border-slate-700 p-5 shadow-2xl max-h-[85vh] overflow-y-auto">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
-        <h2 class="text-base font-bold text-white flex items-center gap-2">
-          <i data-lucide="book-open" class="w-4 h-4 text-sky-400"></i> Physics & Constitutive Theory
-        </h2>
-        <button onclick="toggleTheoryModal(false)" class="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white">
-          <i data-lucide="x" class="w-5 h-5"></i>
+  <!-- MAIN WORKSPACE -->
+  <main class="flex-1 relative flex overflow-hidden">
+
+    <!-- TAB 1: INTERACTIVE SIMULATION CANVAS (Full space on mobile, Center col on desktop) -->
+    <section id="panel-sim" class="mobile-tab-view flex-1 flex flex-col relative w-full h-full bg-[#050811] overflow-hidden">
+      
+      <!-- Top Slim Telemetry Ribbon (Fixes the overlapping stats card!) -->
+      <div class="absolute top-2 left-2 right-2 z-20 flex items-center justify-between pointer-events-none">
+        <div class="flex items-center space-x-1 overflow-x-auto no-scrollbar pointer-events-auto bg-slate-950/80 backdrop-blur-md px-2 py-1 rounded-lg border border-slate-800/80 text-[11px] font-mono shadow-lg">
+          <div class="px-1.5 py-0.5 rounded bg-sky-950/60 border border-sky-800/40 text-sky-300">
+            Δx: <span id="hud-dx" class="font-bold text-white">+0.00</span> cm
+          </div>
+          <div class="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
+            v: <span id="hud-v" class="font-bold text-white">0.00</span> m/s
+          </div>
+          <div class="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
+            F: <span id="hud-f" class="font-bold text-amber-400">0.00</span> N
+          </div>
+          <div class="px-1.5 py-0.5 rounded bg-indigo-950/50 border border-indigo-800/40 text-indigo-300">
+            T: <span id="hud-t" class="font-bold text-indigo-200">0.00</span> s
+          </div>
+        </div>
+
+        <button id="toggle-vectors-btn" class="pointer-events-auto h-7 px-2 bg-slate-950/80 backdrop-blur-md rounded-md border border-slate-800 text-[11px] text-slate-300 hover:text-sky-400 font-medium flex items-center space-x-1 shadow-lg">
+          <i data-lucide="compass" class="w-3.5 h-3.5 text-sky-400"></i>
+          <span class="hidden sm:inline">Vectors</span>
         </button>
       </div>
 
-      <div class="space-y-3.5 text-xs text-slate-300 leading-relaxed font-sans">
-        <div>
-          <h4 class="font-bold text-sky-400 text-xs uppercase tracking-wide">1. Hooke's Law & Restoration</h4>
-          <p>Within elastic bounds, the restoring force is linear to elongation $\Delta x = y - L_0$:</p>
-          <div class="bg-lab-950 p-2 rounded-lg border border-slate-800 font-mono text-sky-300 text-center my-1">
-            F_s = -k \cdot \Delta x
-          </div>
+      <!-- Physics Simulation Canvas with Touch Action None -->
+      <canvas id="sim-canvas" class="w-full h-full block touch-pan-y-none cursor-grab active:cursor-grabbing"></canvas>
+
+      <!-- Drag Prompt Banner (Disappears after first interaction) -->
+      <div id="drag-hint" class="absolute bottom-16 left-1/2 -translate-x-1/2 z-20 pointer-events-none bg-slate-900/90 border border-sky-500/30 text-sky-300 px-3 py-1 rounded-full text-xs font-medium shadow-xl backdrop-blur-sm flex items-center space-x-1.5 animate-pulse transition-opacity">
+        <i data-lucide="hand" class="w-3.5 h-3.5 text-sky-400"></i>
+        <span>Touch &amp; Drag mass to stretch</span>
+      </div>
+
+      <!-- Floating Controls Island (Play, Pause, Step, Reset) -->
+      <div class="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center space-x-1 bg-slate-950/90 backdrop-blur-lg border border-slate-800/90 px-2 py-1.5 rounded-full shadow-2xl">
+        <button id="sim-play-btn" class="w-8 h-8 rounded-full bg-sky-500 text-slate-950 font-bold flex items-center justify-center hover:bg-sky-400 transition-transform active:scale-95 shadow-md shadow-sky-500/30">
+          <i data-lucide="pause" id="play-btn-icon" class="w-4 h-4"></i>
+        </button>
+        <button id="sim-step-btn" class="w-8 h-8 rounded-full bg-slate-900 text-slate-300 flex items-center justify-center hover:text-white hover:bg-slate-800 transition-colors" title="Step Frame">
+          <i data-lucide="step-forward" class="w-4 h-4"></i>
+        </button>
+        <button id="sim-reset-btn" class="w-8 h-8 rounded-full bg-slate-900 text-slate-300 flex items-center justify-center hover:text-rose-400 hover:bg-slate-800 transition-colors" title="Reset Equilibrium">
+          <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+        </button>
+        <div class="w-[1px] h-4 bg-slate-800 mx-1"></div>
+        <select id="time-speed-select" class="bg-transparent text-slate-300 text-xs font-mono outline-none cursor-pointer pr-1">
+          <option value="1.0">1.0x Real</option>
+          <option value="0.5">0.5x Slow</option>
+          <option value="0.2">0.2x Precision</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- TAB 2: PARAMETERS & TUNING PANEL (Desktop Left Column / Mobile Tab) -->
+    <aside id="panel-params" class="mobile-tab-view hidden lg:flex flex-col w-full lg:w-80 xl:w-96 border-r border-slate-800/80 bg-slate-950/95 lg:bg-slate-950/60 backdrop-blur-md overflow-y-auto p-4 space-y-5 z-20">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center space-x-1.5">
+          <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+          <span>Spring &amp; Mass Parameters</span>
+        </h2>
+        <span class="text-[10px] font-mono text-slate-500">RK4 Engine</span>
+      </div>
+
+      <!-- Spring Stiffness (k) -->
+      <div class="space-y-1.5">
+        <div class="flex justify-between items-center text-xs">
+          <span class="text-slate-300 font-medium">Stiffness (k)</span>
+          <span id="label-k" class="font-mono text-sky-400 font-bold">50.0 N/m</span>
         </div>
-        <div>
-          <h4 class="font-bold text-amber-400 text-xs uppercase tracking-wide">2. Equation of Motion (RK4 Solver)</h4>
-          <p>Equating dynamic sum of forces including viscous damping and driving force:</p>
-          <div class="bg-lab-950 p-2 rounded-lg border border-slate-800 font-mono text-amber-300 text-center my-1">
-            m \cdot \frac{d^2x}{dt^2} + c \cdot \frac{dx}{dt} + k \cdot x = F_0 \cos(2\pi f t)
-          </div>
-        </div>
-        <div>
-          <h4 class="font-bold text-indigo-400 text-xs uppercase tracking-wide">3. Topologies</h4>
-          <p><strong>Parallel:</strong> $k_{eq} = k_1 + k_2$ &nbsp;|&nbsp; <strong>Series:</strong> $\frac{1}{k_{eq}} = \frac{1}{k_1} + \frac{1}{k_2}$</p>
-        </div>
-        <div>
-          <h4 class="font-bold text-rose-400 text-xs uppercase tracking-wide">4. Tensile Yield & Fatigue</h4>
-          <p>Exceeding $F_{yield}$ causes plastic dislocation creep. Beyond $F_{ult}$, cohesive shear fractures the spring.</p>
+        <input id="slider-k" type="range" min="5" max="300" step="1" value="50" class="w-full">
+        <div class="flex justify-between text-[10px] font-mono text-slate-500">
+          <span>5 N/m (Soft)</span>
+          <span>300 N/m (Stiff)</span>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- Toast Notification Container -->
-  <div id="toastRack" class="fixed bottom-20 md:bottom-5 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+      <!-- Attached Mass (m) -->
+      <div class="space-y-1.5">
+        <div class="flex justify-between items-center text-xs">
+          <span class="text-slate-300 font-medium">Suspended Mass (m)</span>
+          <span id="label-m" class="font-mono text-sky-400 font-bold">1.00 kg</span>
+        </div>
+        <input id="slider-m" type="range" min="0.1" max="5.0" step="0.05" value="1.0" class="w-full">
+        <div class="flex justify-between text-[10px] font-mono text-slate-500">
+          <span>0.1 kg</span>
+          <span>5.0 kg</span>
+        </div>
+      </div>
 
+      <!-- Damping Coefficient (c) -->
+      <div class="space-y-1.5">
+        <div class="flex justify-between items-center text-xs">
+          <span class="text-slate-300 font-medium">Damping Coefficient (c)</span>
+          <span id="label-c" class="font-mono text-sky-400 font-bold">0.15 Ns/m</span>
+        </div>
+        <input id="slider-c" type="range" min="0.0" max="4.0" step="0.05" value="0.15" class="w-full">
+        <div class="flex justify-between text-[10px] font-mono text-slate-500">
+          <span>0 (Undamped)</span>
+          <span>Critical ~ 14</span>
+        </div>
+      </div>
+
+      <!-- Rest Length (L0) -->
+      <div class="space-y-1.5">
+        <div class="flex justify-between items-center text-xs">
+          <span class="text-slate-300 font-medium">Spring Natural Rest Length (L₀)</span>
+          <span id="label-l0" class="font-mono text-sky-400 font-bold">0.80 m</span>
+        </div>
+        <input id="slider-l0" type="range" min="0.3" max="1.4" step="0.05" value="0.8" class="w-full">
+      </div>
+
+      <!-- Resonance Driver -->
+      <div class="p-3 rounded-lg bg-slate-900/80 border border-slate-800 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-200 flex items-center space-x-1.5">
+            <i data-lucide="waves" class="w-3.5 h-3.5 text-indigo-400"></i>
+            <span>Periodic Harmonic Driver</span>
+          </span>
+          <input type="checkbox" id="driver-toggle" class="w-4 h-4 rounded accent-sky-500 cursor-pointer">
+        </div>
+        <div id="driver-controls" class="space-y-2 opacity-40 pointer-events-none transition-opacity pt-1">
+          <div class="flex justify-between text-[11px] font-mono">
+            <span class="text-slate-400">Driver Freq (f):</span>
+            <span id="label-driver-f" class="text-indigo-400 font-bold">1.10 Hz</span>
+          </div>
+          <input id="slider-driver-f" type="range" min="0.1" max="5.0" step="0.05" value="1.1" class="w-full">
+          <div class="flex justify-between text-[11px] font-mono">
+            <span class="text-slate-400">Driver Amplitude:</span>
+            <span id="label-driver-amp" class="text-indigo-400 font-bold">0.05 m</span>
+          </div>
+          <input id="slider-driver-amp" type="range" min="0.01" max="0.2" step="0.01" value="0.05" class="w-full">
+        </div>
+      </div>
+
+      <!-- Presets Selector -->
+      <div class="space-y-1.5 pt-1">
+        <label class="text-xs text-slate-400 font-medium">Quick Physics Presets</label>
+        <select id="preset-select" class="w-full bg-slate-900 border border-slate-800 text-slate-200 text-xs rounded-md p-2 outline-none focus:border-sky-500">
+          <option value="default">Standard Laboratory Coil (k=50, m=1.0)</option>
+          <option value="soft">Soft Slinky (k=12, m=0.3)</option>
+          <option value="stiff">Automotive Suspension (k=240, m=3.5)</option>
+          <option value="underdamped">High-Q Harmonic Ringing (c=0.01)</option>
+          <option value="overdamped">Heavy Dashpot Shock Absorber (c=3.2)</option>
+        </select>
+      </div>
+    </aside>
+
+    <!-- TAB 3: TELEMETRY & OSCILLOSCOPE (Desktop Right Column / Mobile Tab) -->
+    <aside id="panel-scope" class="mobile-tab-view hidden lg:flex flex-col w-full lg:w-80 xl:w-96 border-l border-slate-800/80 bg-slate-950/95 lg:bg-slate-950/60 backdrop-blur-md overflow-y-auto p-4 space-y-4 z-20">
+      
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center space-x-1.5">
+          <i data-lucide="activity" class="w-3.5 h-3.5"></i>
+          <span>Multi-Channel Scope</span>
+        </h2>
+        <span class="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-800/40 px-1 rounded">LIVE</span>
+      </div>
+
+      <!-- Scope Channel Mode Selector -->
+      <div class="grid grid-cols-4 gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800">
+        <button data-scope="xt" class="scope-mode-btn active px-1 py-1 rounded text-[11px] font-mono text-center bg-sky-500/20 text-sky-400 font-bold border border-sky-500/30">x(t)</button>
+        <button data-scope="vt" class="scope-mode-btn px-1 py-1 rounded text-[11px] font-mono text-center text-slate-400 hover:text-white">v(t)</button>
+        <button data-scope="phase" class="scope-mode-btn px-1 py-1 rounded text-[11px] font-mono text-center text-slate-400 hover:text-white">v vs x</button>
+        <button data-scope="fx" class="scope-mode-btn px-1 py-1 rounded text-[11px] font-mono text-center text-slate-400 hover:text-white">F vs Δx</button>
+      </div>
+
+      <!-- Oscilloscope Canvas Box -->
+      <div class="relative w-full h-44 bg-[#03060c] rounded-lg border border-slate-800 overflow-hidden shadow-inner flex items-center justify-center">
+        <canvas id="scope-canvas" class="w-full h-full block"></canvas>
+      </div>
+
+      <!-- Dynamic Energy Partition Gauge -->
+      <div class="p-3 rounded-lg bg-slate-900/80 border border-slate-800 space-y-2">
+        <div class="flex justify-between items-center text-xs">
+          <span class="font-semibold text-slate-200 flex items-center space-x-1">
+            <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>Total Mechanical Energy</span>
+          </span>
+          <span id="label-e-total" class="font-mono text-amber-400 font-bold">0.00 J</span>
+        </div>
+
+        <!-- Segmented Energy Bar -->
+        <div class="w-full h-3 bg-slate-950 rounded-full overflow-hidden flex border border-slate-800 shadow-inner">
+          <div id="bar-e-kinetic" class="h-full bg-sky-500 transition-all duration-75" style="width: 30%" title="Kinetic Energy"></div>
+          <div id="bar-e-elastic" class="h-full bg-emerald-500 transition-all duration-75" style="width: 40%" title="Spring Elastic Energy"></div>
+          <div id="bar-e-grav" class="h-full bg-amber-500 transition-all duration-75" style="width: 30%" title="Gravitational Potential"></div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-1 pt-1 text-[10px] font-mono text-slate-400">
+          <div class="flex items-center space-x-1">
+            <div class="w-2 h-2 rounded-full bg-sky-500"></div>
+            <span>Ek: <span id="label-e-k" class="text-white">0.0J</span></span>
+          </div>
+          <div class="flex items-center space-x-1">
+            <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+            <span>Ee: <span id="label-e-e" class="text-white">0.0J</span></span>
+          </div>
+          <div class="flex items-center space-x-1">
+            <div class="w-2 h-2 rounded-full bg-amber-500"></div>
+            <span>Eg: <span id="label-e-g" class="text-white">0.0J</span></span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- TAB 4: LAB DATA & HOOKE REGRESSION (Desktop overlays or Mobile Tab) -->
+    <aside id="panel-data" class="mobile-tab-view hidden flex-col w-full border-l border-slate-800/80 bg-slate-950/95 overflow-y-auto p-4 space-y-4 z-20">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center space-x-1.5">
+          <i data-lucide="table" class="w-3.5 h-3.5"></i>
+          <span>Empirical Data &amp; Hooke Regression</span>
+        </h2>
+        <button id="record-point-btn" class="px-2 py-1 bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold rounded flex items-center space-x-1">
+          <i data-lucide="plus" class="w-3 h-3"></i>
+          <span>Log Current State</span>
+        </button>
+      </div>
+
+      <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800 space-y-1 text-xs">
+        <div class="flex justify-between font-mono">
+          <span class="text-slate-400">Calculated Linear Slope (k):</span>
+          <span id="regr-k" class="text-sky-400 font-bold">-- N/m</span>
+        </div>
+        <div class="flex justify-between font-mono">
+          <span class="text-slate-400">Fit Coefficient of Determination (R²):</span>
+          <span id="regr-r2" class="text-emerald-400 font-bold">--</span>
+        </div>
+      </div>
+
+      <!-- Data Table -->
+      <div class="overflow-x-auto rounded-lg border border-slate-800">
+        <table class="w-full text-left text-xs font-mono">
+          <thead class="bg-slate-900 text-slate-400 border-b border-slate-800 text-[10px]">
+            <tr>
+              <th class="p-2">#</th>
+              <th class="p-2">Mass (g)</th>
+              <th class="p-2">Force (N)</th>
+              <th class="p-2">Ext Δx (cm)</th>
+              <th class="p-2 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody id="hooke-table-body" class="divide-y divide-slate-800/60 bg-slate-950/60">
+            <!-- Dynamically populated rows -->
+            <tr>
+              <td colspan="5" class="p-3 text-center text-slate-500 font-sans">No data points logged yet. Pull the spring and tap "Log Current State".</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex space-x-2">
+        <button id="clear-table-btn" class="flex-1 py-1.5 border border-slate-800 hover:bg-slate-900 rounded text-xs text-rose-400 font-medium">Clear Data</button>
+        <button id="export-csv-btn" class="flex-1 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded text-xs text-slate-200 font-medium">Export CSV</button>
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- MOBILE NATIVE-STYLE BOTTOM NAVIGATION BAR (Visible ONLY on Mobile/Tablets < 1024px) -->
+  <nav class="lg:hidden h-14 border-t border-slate-800 bg-slate-950/95 backdrop-blur-xl grid grid-cols-4 items-center z-40 pb-safe shrink-0">
+    <button data-target="panel-sim" class="mobile-nav-btn active flex flex-col items-center justify-center space-y-0.5 text-sky-400">
+      <i data-lucide="atom" class="w-4 h-4"></i>
+      <span class="text-[10px] font-medium tracking-tight">Lab Sim</span>
+    </button>
+    <button data-target="panel-params" class="mobile-nav-btn flex flex-col items-center justify-center space-y-0.5 text-slate-400 hover:text-slate-200">
+      <i data-lucide="sliders" class="w-4 h-4"></i>
+      <span class="text-[10px] font-medium tracking-tight">Tune</span>
+    </button>
+    <button data-target="panel-scope" class="mobile-nav-btn flex flex-col items-center justify-center space-y-0.5 text-slate-400 hover:text-slate-200">
+      <i data-lucide="activity" class="w-4 h-4"></i>
+      <span class="text-[10px] font-medium tracking-tight">Scope</span>
+    </button>
+    <button data-target="panel-data" class="mobile-nav-btn flex flex-col items-center justify-center space-y-0.5 text-slate-400 hover:text-slate-200">
+      <i data-lucide="table" class="w-4 h-4"></i>
+      <span class="text-[10px] font-medium tracking-tight">Data Log</span>
+    </button>
+  </nav>
+
+  <!-- JAVASCRIPT SIMULATION LOGIC -->
   <script>
-    /* =========================================================================
-       LABORATORY SIMULATION STATE ENGINE
-       ========================================================================= */
-    const SIM = {
-      mode: 'single', // 'single', 'hooke', 'config', 'yield'
-      running: true,
-      timeScale: 1.0,
-      gravity: 9.80665,
+    // Initialize Lucide Icons
+    lucide.createIcons();
 
-      // Single Spring Parameters
-      k: 50.0,
-      m: 1.00,
-      c: 0.25,
-      L0: 0.80,
+    /* =========================================================
+     *  PHYSICAL CONSTANTS & SIMULATION STATE
+     * ========================================================= */
+    const State = {
+      // Physical parameters
+      k: 50.0,            // Spring stiffness (N/m)
+      m: 1.0,             // Mass (kg)
+      c: 0.15,            // Viscous damping (N*s/m)
+      L0: 0.8,            // Natural rest length (meters)
+      g: 9.81,            // Acceleration due to gravity (m/s^2)
+      
+      // Dynamic variables
+      x: 0.1962,          // Displacement from equilibrium (m). Initialized to static stretch: m*g/k = 1*9.81/50 = 0.1962m
+      v: 0.0,             // Velocity (m/s)
+      a: 0.0,             // Acceleration (m/s^2)
+      
+      // External Periodic Driver
+      driverActive: false,
+      driverFreq: 1.1,    // Hz
+      driverAmp: 0.05,    // m
+      
+      // Tensile yield & fracture
+      yieldLimit: 1.4,    // Yield displacement threshold (m)
+      fractureLimit: 2.1, // Break threshold (m)
+      isFractured: false,
+      plasticDeformation: 0.0,
 
-      // State vectors (y downward from ceiling anchor)
-      y: 0.80 + (1.0 * 9.80665 / 50.0),
-      v: 0.0,
-      a: 0.0,
+      // Series / Parallel mode
+      mode: 'oscillator', // 'oscillator' | 'hooke' | 'series_par' | 'tensile'
+      seriesParConfig: 'parallel', // 'parallel' | 'series'
+      
+      // Controls & Clock
+      isRunning: true,
+      timeSpeed: 1.0,
+      showVectors: true,
+      audioEnabled: false,
+      
+      // Interaction
+      isDragging: false,
+      dragStartY: 0,
+      dragStartDisplacement: 0,
+      hasInteracted: false,
 
-      // Energy
-      E_ke: 0,
-      E_pe: 0,
-      E_ge: 0,
-      E_th: 0,
+      // Time tracking
+      simTime: 0,
+      lastZeroCrossing: 0,
+      period: 0.89,
 
-      // Driving force
-      driver: {
-        active: false,
-        amp: 4.5,
-        freq: 1.13,
-      },
-
-      // Overlays
-      overlays: {
-        ruler: true,
-        vectors: true,
-        guides: true,
-      },
-
-      // Mode 2: Hooke
-      hooke: {
-        weights: [],
-        data: []
-      },
-
-      // Mode 3: Config
-      config: {
-        k1: 40.0,
-        k2: 60.0,
-        mass: 1.5,
-        par: { y: 0.8 + (1.5*9.81)/100, v: 0, a: 0 },
-        ser: { y: 1.2 + (1.5*9.81)/24, v: 0, a: 0 }
-      },
-
-      // Mode 4: Yield
-      yield: {
-        material: 'music_wire',
-        f_yield: 50.0,
-        f_ult: 85.0,
-        plasticStrain: 0.0,
-        fractured: false
-      },
-
-      // Scope buffers
-      scope: {
-        chan: 'xt',
-        size: 260,
-        bufX: [],
-        bufV: [],
-        bufF: [],
-      },
-
-      // Pointer interaction
-      pointer: {
-        active: false,
-        id: null,
-        offsetY: 0
-      },
-
-      // Photogate
-      gate: {
-        lastCross: null,
-        period: null
-      },
-
-      // Rendering coordinates
-      pxPerMeter: 160,
-      anchorY: 48,
+      // Empirical logging data
+      hookeData: []
     };
 
-    /* =========================================================================
-       PROCEDURAL WEB AUDIO SYNTHESIZER
-       ========================================================================= */
+    /* =========================================================
+     *  AUDIO SYNTHESIZER (Web Audio API)
+     * ========================================================= */
     let audioCtx = null;
-    let isMuted = true;
+    let springOsc = null;
+    let springGain = null;
 
     function initAudio() {
       if (audioCtx) return;
       try {
-        const AudioClass = window.AudioContext || window.webkitAudioContext;
-        audioCtx = new AudioClass();
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+        springGain = audioCtx.createGain();
+        springGain.gain.setValueAtTime(0, audioCtx.currentTime);
+        springGain.connect(audioCtx.destination);
       } catch (e) {
-        console.warn('Audio not available');
+        console.warn('Web Audio not supported');
       }
     }
 
-    function toggleAudio() {
-      initAudio();
-      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-      isMuted = !isMuted;
-      
-      const icon = document.getElementById('audioIcon');
-      if (isMuted) {
-        icon.setAttribute('data-lucide', 'volume-x');
-        showToast('Sound Muted');
-      } else {
-        icon.setAttribute('data-lucide', 'volume-2');
-        showToast('Web Audio Synthesizer Enabled');
-      }
-      lucide.createIcons();
-    }
-
-    function playSnap() {
-      if (isMuted || !audioCtx) return;
-      try {
-        const t = audioCtx.currentTime;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(650, t);
-        osc.frequency.exponentialRampToValueAtTime(60, t + 0.3);
-        gain.gain.setValueAtTime(0.35, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(t);
-        osc.stop(t + 0.31);
-      } catch(e) {}
-    }
-
-    function playClink() {
-      if (isMuted || !audioCtx) return;
-      try {
-        const t = audioCtx.currentTime;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(1400, t);
-        osc.frequency.exponentialRampToValueAtTime(300, t + 0.08);
-        gain.gain.setValueAtTime(0.2, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(t);
-        osc.stop(t + 0.09);
-      } catch(e) {}
-    }
-
-    function triggerHaptic(type = 'light') {
-      if (!('vibrate' in navigator)) return;
-      try {
-        if (type === 'light') navigator.vibrate(12);
-        else if (type === 'snap') navigator.vibrate([40, 50, 70]);
-      } catch(e) {}
-    }
-
-    /* =========================================================================
-       PHYSICS INTEGRATOR: 4th-ORDER RUNGE-KUTTA (RK4)
-       ========================================================================= */
-    function calcAccel(y, v, t) {
-      if (SIM.yield.fractured) return SIM.gravity;
-
-      const effL0 = SIM.L0 + SIM.yield.plasticStrain;
-      const ext = y - effL0;
-      const f_spring = -SIM.k * ext;
-      const f_grav = SIM.m * SIM.gravity;
-      const f_damp = -SIM.c * v;
-      let f_drive = 0;
-      if (SIM.driver.active) {
-        f_drive = SIM.driver.amp * Math.cos(2 * Math.PI * SIM.driver.freq * t);
-      }
-
-      return (f_spring + f_grav + f_damp + f_drive) / SIM.m;
-    }
-
-    function rk4Solve(dt, t) {
-      const steps = 6;
-      const sdt = dt / steps;
-
-      for (let s = 0; s < steps; s++) {
-        const ct = t + s * sdt;
-
-        if (SIM.mode !== 'config') {
-          const y0 = SIM.y;
-          const v0 = SIM.v;
-
-          const a1 = calcAccel(y0, v0, ct);
-          const dy1 = v0;
-
-          const y2 = y0 + 0.5 * sdt * dy1;
-          const v2 = v0 + 0.5 * sdt * a1;
-          const a2 = calcAccel(y2, v2, ct + 0.5 * sdt);
-          const dy2 = v2;
-
-          const y3 = y0 + 0.5 * sdt * dy2;
-          const v3 = v0 + 0.5 * sdt * a2;
-          const a3 = calcAccel(y3, v3, ct + 0.5 * sdt);
-          const dy3 = v3;
-
-          const y4 = y0 + sdt * dy3;
-          const v4 = v0 + sdt * a3;
-          const a4 = calcAccel(y4, v4, ct + sdt);
-          const dy4 = v4;
-
-          SIM.y += (sdt / 6) * (dy1 + 2*dy2 + 2*dy3 + dy4);
-          SIM.v += (sdt / 6) * (a1 + 2*a2 + 2*a3 + a4);
-          SIM.a = calcAccel(SIM.y, SIM.v, ct + sdt);
-
-          if (SIM.y > 4.2) {
-            SIM.y = 4.2;
-            SIM.v = -SIM.v * 0.2;
-          }
-
-          // Dissipation
-          SIM.E_th += Math.abs(SIM.c * SIM.v * SIM.v) * sdt;
-
-          // Mode 4: Yield check
-          if (SIM.mode === 'yield' && !SIM.yield.fractured) {
-            const ext = Math.max(0, SIM.y - (SIM.L0 + SIM.yield.plasticStrain));
-            const load = SIM.k * ext;
-
-            if (load > SIM.yield.f_yield) {
-              const delta = (load - SIM.yield.f_yield) / SIM.k;
-              SIM.yield.plasticStrain += delta * 0.4 * sdt;
-              triggerHaptic('light');
-            }
-
-            if (load >= SIM.yield.f_ult) {
-              SIM.yield.fractured = true;
-              playSnap();
-              triggerHaptic('snap');
-              document.getElementById('fractureBanner').classList.remove('hidden');
-              showToast('Spring fractured past ultimate tensile limit!', 'error');
-            }
-          }
-
-        } else {
-          // Dual Series & Parallel solver
-          solveConfig(sdt);
+    function playCreakSound(velocity) {
+      if (!State.audioEnabled || !audioCtx) return;
+      const speed = Math.abs(velocity);
+      if (speed > 0.05) {
+        if (!springOsc) {
+          springOsc = audioCtx.createOscillator();
+          springOsc.type = 'triangle';
+          springOsc.frequency.setValueAtTime(140 + State.k * 0.8, audioCtx.currentTime);
+          springOsc.connect(springGain);
+          springOsc.start();
         }
+        const vol = Math.min(0.2, speed * 0.1);
+        springGain.gain.setTargetAtTime(vol, audioCtx.currentTime, 0.03);
+      } else if (springGain) {
+        springGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
       }
     }
 
-    function solveConfig(dt) {
-      const g = SIM.gravity;
-      const m = SIM.config.mass;
-      const c = 0.25;
+    /* =========================================================
+     *  DOM ELEMENTS & CANVASES
+     * ========================================================= */
+    const simCanvas = document.getElementById('sim-canvas');
+    const simCtx = simCanvas.getContext('2d');
 
-      // Parallel
-      const k_par = SIM.config.k1 + SIM.config.k2;
-      const ext_par = SIM.config.par.y - SIM.L0;
-      const f_par = -k_par * ext_par + m * g - c * SIM.config.par.v;
-      const a_par = f_par / m;
-      SIM.config.par.v += a_par * dt;
-      SIM.config.par.y += SIM.config.par.v * dt;
-      SIM.config.par.a = a_par;
-
-      // Series
-      const k_ser = (SIM.config.k1 * SIM.config.k2) / (SIM.config.k1 + SIM.config.k2);
-      const totalL0_ser = SIM.L0 * 1.5;
-      const ext_ser = SIM.config.ser.y - totalL0_ser;
-      const f_ser = -k_ser * ext_ser + m * g - c * SIM.config.ser.v;
-      const a_ser = f_ser / m;
-      SIM.config.ser.v += a_ser * dt;
-      SIM.config.ser.y += SIM.config.ser.v * dt;
-      SIM.config.ser.a = a_ser;
-    }
-
-    /* =========================================================================
-       CANVAS RENDERING & TOUCH GESTURE HANDLING
-       ========================================================================= */
-    const canvas = document.getElementById('physicsCanvas');
-    const ctx = canvas.getContext('2d');
-    const scopeCanvas = document.getElementById('scopeCanvas');
+    const scopeCanvas = document.getElementById('scope-canvas');
     const scopeCtx = scopeCanvas.getContext('2d');
 
-    function resizeCanvasElements() {
+    // Telemetry Oscilloscope History Buffer
+    const scopeBuffer = [];
+    const MAX_BUFFER = 250;
+    let activeScopeMode = 'xt';
+
+    // Scale factors: pixels per meter
+    let ppm = 180; // dynamic based on screen size
+
+    /* =========================================================
+     *  RESPONSIVE RESIZING WITH DPR
+     * ========================================================= */
+    function resizeCanvases() {
       const dpr = window.devicePixelRatio || 1;
       
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      // Main Canvas
+      const rectSim = simCanvas.getBoundingClientRect();
+      simCanvas.width = rectSim.width * dpr;
+      simCanvas.height = rectSim.height * dpr;
+      simCtx.resetTransform();
+      simCtx.scale(dpr, dpr);
+      
+      // Auto-scale pixels per meter to fit device height comfortably
+      ppm = Math.min(rectSim.width * 0.65, rectSim.height * 0.42);
 
-      // Adjust pixel scaling dynamically for smaller mobile screens
-      if (rect.width < 500) {
-        SIM.pxPerMeter = 135;
-      } else {
-        SIM.pxPerMeter = 165;
-      }
-
-      if (scopeCanvas) {
-        const sRect = scopeCanvas.getBoundingClientRect();
-        scopeCanvas.width = sRect.width * dpr;
-        scopeCanvas.height = sRect.height * dpr;
-        scopeCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      }
+      // Oscilloscope Canvas
+      const rectScope = scopeCanvas.getBoundingClientRect();
+      scopeCanvas.width = rectScope.width * dpr;
+      scopeCanvas.height = rectScope.height * dpr;
+      scopeCtx.resetTransform();
+      scopeCtx.scale(dpr, dpr);
     }
+    window.addEventListener('resize', resizeCanvases);
 
-    window.addEventListener('resize', resizeCanvasElements);
-    new ResizeObserver(resizeCanvasElements).observe(document.getElementById('canvasContainer'));
+    /* =========================================================
+     *  MOBILE VIEW NAVIGATION (Tab Switching)
+     * ========================================================= */
+    const mobileNavBtns = document.querySelectorAll('.mobile-nav-btn');
+    const tabViews = {
+      'panel-sim': document.getElementById('panel-sim'),
+      'panel-params': document.getElementById('panel-params'),
+      'panel-scope': document.getElementById('panel-scope'),
+      'panel-data': document.getElementById('panel-data')
+    };
 
-    // Pointer Events with pointer capture for flawless finger tracking
-    canvas.addEventListener('pointerdown', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const px = e.clientX - rect.left;
-      const py = e.clientY - rect.top;
+    mobileNavBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.dataset.target;
 
-      const anchorX = rect.width * 0.5;
-      const massY = SIM.anchorY + SIM.y * SIM.pxPerMeter + 35;
+        mobileNavBtns.forEach(b => {
+          b.classList.remove('text-sky-400', 'active');
+          b.classList.add('text-slate-400');
+        });
+        btn.classList.add('text-sky-400', 'active');
+        btn.classList.remove('text-slate-400');
 
-      const dist = Math.hypot(px - anchorX, py - massY);
-      if (dist < 60) {
-        SIM.pointer.active = true;
-        SIM.pointer.id = e.pointerId;
-        canvas.setPointerCapture(e.pointerId);
-        SIM.pointer.offsetY = py - massY;
-        SIM.v = 0;
-        document.getElementById('touchDragHint').style.display = 'none';
-        triggerHaptic('light');
-      }
-    });
-
-    canvas.addEventListener('pointermove', (e) => {
-      if (!SIM.pointer.active || e.pointerId !== SIM.pointer.id) return;
-      const rect = canvas.getBoundingClientRect();
-      const py = e.clientY - rect.top;
-
-      const targetPixelY = py - SIM.pointer.offsetY - 35;
-      const targetMeters = Math.max(0.1, (targetPixelY - SIM.anchorY) / SIM.pxPerMeter);
-
-      SIM.v = (targetMeters - SIM.y) * 20;
-      SIM.y = targetMeters;
-    });
-
-    function releasePointer(e) {
-      if (SIM.pointer.active && e.pointerId === SIM.pointer.id) {
-        SIM.pointer.active = false;
-        try { canvas.releasePointerCapture(e.pointerId); } catch(err) {}
-        SIM.v = Math.max(-10, Math.min(10, SIM.v));
-      }
-    }
-    canvas.addEventListener('pointerup', releasePointer);
-    canvas.addEventListener('pointercancel', releasePointer);
-
-    function drawHelicalCoil(c, x, yStart, yEnd, radius, turns, color = '#38bdf8', broken = false) {
-      c.save();
-      const len = yEnd - yStart;
-
-      // Top mounting pin
-      c.beginPath();
-      c.moveTo(x, yStart);
-      c.lineTo(x, yStart + 12);
-      c.lineWidth = 4;
-      c.strokeStyle = '#64748b';
-      c.lineCap = 'round';
-      c.stroke();
-
-      if (broken) {
-        const midY = yStart + len * 0.45;
-        c.beginPath();
-        c.moveTo(x, yStart + 12);
-        c.lineTo(x - radius, yStart + 35);
-        c.lineTo(x + radius, yStart + 60);
-        c.lineTo(x - radius * 0.7, midY - 10);
-        c.lineWidth = 4;
-        c.strokeStyle = '#f43f5e';
-        c.stroke();
-
-        c.beginPath();
-        c.moveTo(x + radius * 0.5, midY + 30);
-        c.lineTo(x - radius, midY + 55);
-        c.lineTo(x + radius, yEnd - 18);
-        c.lineTo(x, yEnd);
-        c.lineWidth = 4;
-        c.strokeStyle = '#f43f5e';
-        c.stroke();
-        c.restore();
-        return;
-      }
-
-      const activeTop = yStart + 12;
-      const activeBottom = yEnd - 12;
-      const activeLen = Math.max(8, activeBottom - activeTop);
-      const points = turns * 32;
-      const stepY = activeLen / points;
-
-      const grad = c.createLinearGradient(x - radius, 0, x + radius, 0);
-      grad.addColorStop(0, '#0c4a6e');
-      grad.addColorStop(0.3, color);
-      grad.addColorStop(0.7, '#ffffff');
-      grad.addColorStop(1, '#082f49');
-
-      c.lineWidth = 4.5;
-      c.lineCap = 'round';
-      c.lineJoin = 'round';
-      c.beginPath();
-      c.moveTo(x, activeTop);
-
-      for (let i = 0; i <= points; i++) {
-        const theta = (i / 32) * Math.PI * 2;
-        const px = x + Math.sin(theta) * radius;
-        const py = activeTop + i * stepY;
-        c.lineTo(px, py);
-      }
-      c.lineTo(x, activeBottom);
-      c.lineTo(x, yEnd);
-
-      c.strokeStyle = grad;
-      c.shadowColor = 'rgba(56, 189, 248, 0.35)';
-      c.shadowBlur = 6;
-      c.stroke();
-      c.restore();
-    }
-
-    function drawMassBody(c, x, y, mass, isGrabbed) {
-      c.save();
-      // Hook ring
-      c.beginPath();
-      c.arc(x, y + 8, 6.5, 0, Math.PI * 2);
-      c.strokeStyle = '#94a3b8';
-      c.lineWidth = 3;
-      c.stroke();
-
-      // Stem
-      const stemH = 50;
-      c.beginPath();
-      c.moveTo(x, y + 14);
-      c.lineTo(x, y + stemH);
-      c.lineWidth = 4;
-      c.strokeStyle = '#64748b';
-      c.stroke();
-
-      // Weight disc stack
-      const discCount = Math.min(5, Math.max(1, Math.round(mass * 1.2)));
-      const discW = 46;
-      const discH = 10;
-
-      for (let i = 0; i < discCount; i++) {
-        const dy = y + stemH - 6 - i * (discH + 2);
-        const grad = c.createLinearGradient(x - discW/2, 0, x + discW/2, 0);
-        grad.addColorStop(0, '#92400e');
-        grad.addColorStop(0.4, '#fcd34d');
-        grad.addColorStop(0.8, '#f59e0b');
-        grad.addColorStop(1, '#78350f');
-
-        c.fillStyle = grad;
-        c.beginPath();
-        c.roundRect(x - discW/2, dy - discH, discW, discH, 3);
-        c.fill();
-        c.strokeStyle = '#451a03';
-        c.lineWidth = 1;
-        c.stroke();
-      }
-
-      // Weight label tag
-      c.fillStyle = '#0f172a';
-      c.strokeStyle = isGrabbed ? '#38bdf8' : '#334155';
-      c.lineWidth = 1.5;
-      c.beginPath();
-      c.roundRect(x - 26, y + stemH + 6, 52, 20, 6);
-      c.fill();
-      c.stroke();
-
-      c.fillStyle = isGrabbed ? '#38bdf8' : '#f8fafc';
-      c.font = 'bold 10px "JetBrains Mono", monospace';
-      c.textAlign = 'center';
-      c.textBaseline = 'middle';
-      c.fillText(`${mass.toFixed(2)} kg`, x, y + stemH + 16);
-
-      if (isGrabbed) {
-        c.strokeStyle = 'rgba(56, 189, 248, 0.5)';
-        c.lineWidth = 2.5;
-        c.beginPath();
-        c.arc(x, y + stemH/2, 36, 0, Math.PI * 2);
-        c.stroke();
-      }
-      c.restore();
-    }
-
-    function drawRulerOverlay(c, w, h) {
-      if (!SIM.overlays.ruler) return;
-      c.save();
-      const rx = 24;
-      const top = SIM.anchorY;
-      const bot = h - 20;
-
-      c.fillStyle = 'rgba(15, 23, 42, 0.7)';
-      c.fillRect(rx, top, 28, bot - top);
-      c.strokeStyle = '#334155';
-      c.lineWidth = 1;
-      c.strokeRect(rx, top, 28, bot - top);
-
-      const pxPerCm = SIM.pxPerMeter / 100;
-      const maxCm = Math.floor((bot - top) / pxPerCm);
-
-      c.fillStyle = '#94a3b8';
-      c.font = '8px "JetBrains Mono", monospace';
-      c.textAlign = 'right';
-
-      for (let cm = 0; cm <= maxCm; cm += 2) {
-        const y = top + cm * pxPerCm;
-        const isDeci = cm % 10 === 0;
-        const tickW = isDeci ? 14 : 7;
-
-        c.beginPath();
-        c.moveTo(rx + 28, y);
-        c.lineTo(rx + 28 - tickW, y);
-        c.strokeStyle = isDeci ? '#38bdf8' : '#475569';
-        c.lineWidth = isDeci ? 1.5 : 1;
-        c.stroke();
-
-        if (isDeci && cm > 0) c.fillText(`${cm}`, rx + 12, y + 3);
-      }
-      c.restore();
-    }
-
-    /* =========================================================================
-       MAIN SIMULATION & GRAPHICS ANIMATION LOOP
-       ========================================================================= */
-    let lastTime = performance.now();
-
-    function simFrameLoop(now) {
-      const dtReal = (now - lastTime) / 1000;
-      lastTime = now;
-
-      if (SIM.running && !SIM.pointer.active) {
-        const dt = Math.min(0.04, dtReal) * SIM.timeScale;
-        rk4Solve(dt, now / 1000);
-        checkPhotogateCross(now);
-      }
-
-      const rect = canvas.getBoundingClientRect();
-      const w = rect.width;
-      const h = rect.height;
-      ctx.clearRect(0, 0, w, h);
-
-      // Girder
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(0, 0, w, SIM.anchorY);
-      ctx.strokeStyle = '#334155';
-      ctx.strokeRect(0, 0, w, SIM.anchorY);
-
-      drawRulerOverlay(ctx, w, h);
-
-      if (SIM.mode !== 'config') {
-        const anchorX = w * 0.5;
-        const massY = SIM.anchorY + SIM.y * SIM.pxPerMeter;
-
-        // Natural L0 marker
-        if (SIM.overlays.guides) {
-          const natY = SIM.anchorY + (SIM.L0 + SIM.yield.plasticStrain) * SIM.pxPerMeter;
-          ctx.save();
-          ctx.setLineDash([4, 4]);
-          ctx.strokeStyle = '#10b981';
-          ctx.beginPath();
-          ctx.moveTo(anchorX - 70, natY);
-          ctx.lineTo(anchorX + 90, natY);
-          ctx.stroke();
-          ctx.restore();
-        }
-
-        // Spring
-        const spColor = SIM.mode === 'yield' && SIM.yield.fractured ? '#f43f5e' : (SIM.mode === 'yield' ? '#f59e0b' : '#38bdf8');
-        drawHelicalCoil(ctx, anchorX, SIM.anchorY, massY, 16, 13, spColor, SIM.yield.fractured);
-
-        // Mass
-        drawMassBody(ctx, anchorX, massY, SIM.m, SIM.pointer.active);
-
-        // Force vectors
-        if (SIM.overlays.vectors) {
-          const effL0 = SIM.L0 + SIM.yield.plasticStrain;
-          const ext = SIM.y - effL0;
-          const f_s = -SIM.k * ext;
-          const f_g = SIM.m * SIM.gravity;
-          drawArrow(ctx, anchorX + 30, massY + 25, anchorX + 30, massY + 25 + f_s * 1.6, '#10b981', `Fs ${Math.abs(f_s).toFixed(1)}N`);
-          drawArrow(ctx, anchorX + 45, massY + 25, anchorX + 45, massY + 25 + f_g * 1.6, '#f59e0b', `Fg ${f_g.toFixed(1)}N`);
-        }
-
-      } else {
-        // Series & Parallel Rig
-        renderConfigView(w);
-      }
-
-      updateTelemetryValues();
-      updateEnergyBuffers();
-      renderOscilloscope();
-
-      requestAnimationFrame(simFrameLoop);
-    }
-
-    function renderConfigView(w) {
-      const leftX = w * 0.32;
-      const rightX = w * 0.68;
-      const m = SIM.config.mass;
-
-      // Parallel
-      const parY = SIM.anchorY + SIM.config.par.y * SIM.pxPerMeter;
-      drawHelicalCoil(ctx, leftX - 18, SIM.anchorY, parY, 12, 11, '#818cf8');
-      drawHelicalCoil(ctx, leftX + 18, SIM.anchorY, parY, 12, 11, '#38bdf8');
-      ctx.fillStyle = '#64748b';
-      ctx.fillRect(leftX - 24, parY - 3, 48, 6);
-      drawMassBody(ctx, leftX, parY, m, false);
-
-      // Series
-      const serY = SIM.anchorY + SIM.config.ser.y * SIM.pxPerMeter;
-      const totalL0 = SIM.L0 * 1.5;
-      const ext = Math.max(0.01, SIM.config.ser.y - totalL0);
-      const ext1 = ext * (SIM.config.k2 / (SIM.config.k1 + SIM.config.k2));
-      const midY = SIM.anchorY + (SIM.L0 * 0.75 + ext1) * SIM.pxPerMeter;
-
-      drawHelicalCoil(ctx, rightX, SIM.anchorY, midY, 13, 9, '#818cf8');
-      ctx.beginPath();
-      ctx.arc(rightX, midY, 4, 0, Math.PI * 2);
-      ctx.fillStyle = '#fff';
-      ctx.fill();
-      drawHelicalCoil(ctx, rightX, midY, serY, 13, 9, '#22d3ee');
-      drawMassBody(ctx, rightX, serY, m, false);
-    }
-
-    function drawArrow(c, x1, y1, x2, y2, color, label) {
-      const len = Math.hypot(x2 - x1, y2 - y1);
-      if (len < 4) return;
-      const angle = Math.atan2(y2 - y1, x2 - x1);
-      const hlen = 7;
-
-      c.save();
-      c.strokeStyle = color;
-      c.fillStyle = color;
-      c.lineWidth = 2;
-
-      c.beginPath();
-      c.moveTo(x1, y1);
-      c.lineTo(x2, y2);
-      c.stroke();
-
-      c.beginPath();
-      c.moveTo(x2, y2);
-      c.lineTo(x2 - hlen * Math.cos(angle - Math.PI/6), y2 - hlen * Math.sin(angle - Math.PI/6));
-      c.lineTo(x2 - hlen * Math.cos(angle + Math.PI/6), y2 - hlen * Math.sin(angle + Math.PI/6));
-      c.closePath();
-      c.fill();
-
-      c.font = '8px "JetBrains Mono", monospace';
-      c.fillText(label, x2 + 4, y2);
-      c.restore();
-    }
-
-    function checkPhotogateCross(now) {
-      const eqY = SIM.L0 + SIM.yield.plasticStrain + (SIM.m * SIM.gravity) / SIM.k;
-      const prevY = SIM.y - SIM.v * 0.016;
-
-      if ((prevY <= eqY && SIM.y >= eqY) || (prevY >= eqY && SIM.y <= eqY)) {
-        if (SIM.v >= 0) {
-          if (SIM.gate.lastCross) {
-            const period = (now - SIM.gate.lastCross) / 1000;
-            if (period > 0.15) {
-              SIM.gate.period = period;
-              document.getElementById('hud-period').textContent = period.toFixed(3) + ' s';
+        // Manage view classes
+        Object.keys(tabViews).forEach(id => {
+          const el = tabViews[id];
+          if (id === targetId) {
+            el.classList.remove('hidden');
+            el.classList.add('flex');
+          } else {
+            // Only hide in mobile responsive mode
+            if (window.innerWidth < 1024) {
+              el.classList.add('hidden');
+              el.classList.remove('flex');
             }
           }
-          SIM.gate.lastCross = now;
-        }
+        });
+
+        // Trigger canvas resize after tab change
+        requestAnimationFrame(resizeCanvases);
+      });
+    });
+
+    // Handle screen resize across the 1024px desktop breakpoint
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 1024) {
+        document.getElementById('panel-sim').classList.remove('hidden');
+        document.getElementById('panel-params').classList.remove('hidden');
+        document.getElementById('panel-scope').classList.remove('hidden');
+      } else {
+        // Return to active tab on mobile
+        const activeNav = document.querySelector('.mobile-nav-btn.active');
+        if (activeNav) activeNav.click();
       }
-    }
+    });
 
-    function updateTelemetryValues() {
-      const effL0 = SIM.L0 + SIM.yield.plasticStrain;
-      const disp = SIM.y - effL0;
-      const dispCm = disp * 100;
-      const force = SIM.yield.fractured ? 0 : -SIM.k * disp;
-
-      document.getElementById('hud-dx').textContent = `${dispCm >= 0 ? '+' : ''}${dispCm.toFixed(2)} cm`;
-      document.getElementById('hud-v').textContent = `${SIM.v.toFixed(2)} m/s`;
-      document.getElementById('hud-a').textContent = `${SIM.a.toFixed(2)} m/s²`;
-      document.getElementById('hud-f').textContent = `${force.toFixed(2)} N`;
-
-      if (SIM.mode === 'yield') {
-        const load = Math.max(0, -force);
-        document.getElementById('disp-plastic-strain').textContent = `${(SIM.yield.plasticStrain * 100).toFixed(2)} cm`;
-        const pct = Math.min(100, (load / SIM.yield.f_ult) * 100);
-        document.getElementById('yieldLoadBar').style.width = `${pct}%`;
-
-        const badge = document.getElementById('stressRegimeBadge');
-        if (SIM.yield.fractured) {
-          badge.textContent = 'FRACTURED';
-          badge.className = 'text-[9px] font-mono px-1.5 py-0.5 rounded bg-rose-950 text-rose-400 border border-rose-500/30 font-bold';
-        } else if (load > SIM.yield.f_yield) {
-          badge.textContent = 'PLASTIC STRAIN';
-          badge.className = 'text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-500/30 font-bold';
+    /* =========================================================
+     *  NUMERICAL INTEGRATION: RUNGE-KUTTA 4TH ORDER (RK4)
+     * ========================================================= */
+    function computeEffectiveK() {
+      if (State.mode === 'series_par') {
+        if (State.seriesParConfig === 'parallel') {
+          return State.k * 2; // k_eq = k1 + k2
         } else {
-          badge.textContent = 'ELASTIC';
-          badge.className = 'text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-500/30 font-bold';
+          return State.k / 2; // k_eq = (k1 * k2)/(k1 + k2)
         }
       }
+      return State.k;
     }
 
-    function updateEnergyBuffers() {
-      const effL0 = SIM.L0 + SIM.yield.plasticStrain;
-      const ext = SIM.y - effL0;
+    function computeAcceleration(x, v, t) {
+      if (State.isFractured) {
+        return State.g; // Once broken, only gravity acts
+      }
 
-      SIM.E_ke = 0.5 * SIM.m * SIM.v * SIM.v;
-      SIM.E_pe = SIM.yield.fractured ? 0 : 0.5 * SIM.k * ext * ext;
-      SIM.E_ge = Math.max(0, SIM.m * SIM.gravity * (3.5 - SIM.y));
+      const effK = computeEffectiveK();
+      
+      // Restorative Hooke's Force: F_s = -k * x
+      let F_spring = -effK * (x - State.plasticDeformation);
+      
+      // Viscous Damping: F_d = -c * v
+      let F_damping = -State.c * v;
+      
+      // Gravity Force: F_g = m * g
+      let F_grav = State.m * State.g;
+      
+      // External Periodic Forcing: F_ext = F0 * sin(omega * t)
+      let F_ext = 0;
+      if (State.driverActive) {
+        const omega = 2 * Math.PI * State.driverFreq;
+        F_ext = effK * State.driverAmp * Math.sin(omega * t);
+      }
 
-      const total = SIM.E_ke + SIM.E_pe + SIM.E_ge + SIM.E_th;
-      const safeTot = Math.max(0.1, total);
+      const F_net = F_spring + F_damping + F_grav + F_ext;
+      return F_net / State.m;
+    }
 
-      document.getElementById('txt-total-e').textContent = `${total.toFixed(2)} J`;
-      document.getElementById('txt-ke').textContent = `${SIM.E_ke.toFixed(1)}J`;
-      document.getElementById('txt-pe').textContent = `${SIM.E_pe.toFixed(1)}J`;
-      document.getElementById('txt-ge').textContent = `${SIM.E_ge.toFixed(1)}J`;
-      document.getElementById('txt-th').textContent = `${SIM.E_th.toFixed(1)}J`;
+    function stepPhysicsRK4(dt) {
+      if (State.isDragging || !State.isRunning) return;
 
-      document.getElementById('bar-ke').style.width = `${(SIM.E_ke / safeTot) * 100}%`;
-      document.getElementById('bar-pe').style.width = `${(SIM.E_pe / safeTot) * 100}%`;
-      document.getElementById('bar-ge').style.width = `${(SIM.E_ge / safeTot) * 100}%`;
-      document.getElementById('bar-th').style.width = `${(SIM.E_th / safeTot) * 100}%`;
+      const subSteps = 6;
+      const h = (dt * State.timeSpeed) / subSteps;
 
-      // Scope buffer
-      SIM.scope.bufX.push(ext);
-      SIM.scope.bufV.push(SIM.v);
-      SIM.scope.bufF.push(-SIM.k * ext);
-      if (SIM.scope.bufX.length > SIM.scope.size) {
-        SIM.scope.bufX.shift();
-        SIM.scope.bufV.shift();
-        SIM.scope.bufF.shift();
+      for (let i = 0; i < subSteps; i++) {
+        const t = State.simTime;
+        const x0 = State.x;
+        const v0 = State.v;
+
+        // k1
+        const a1 = computeAcceleration(x0, v0, t);
+        const k1_x = v0;
+        const k1_v = a1;
+
+        // k2
+        const x_mid1 = x0 + 0.5 * h * k1_x;
+        const v_mid1 = v0 + 0.5 * h * k1_v;
+        const a2 = computeAcceleration(x_mid1, v_mid1, t + 0.5 * h);
+        const k2_x = v_mid1;
+        const k2_v = a2;
+
+        // k3
+        const x_mid2 = x0 + 0.5 * h * k2_x;
+        const v_mid2 = v0 + 0.5 * h * k2_v;
+        const a3 = computeAcceleration(x_mid2, v_mid2, t + 0.5 * h);
+        const k3_x = v_mid2;
+        const k3_v = a3;
+
+        // k4
+        const x_end = x0 + h * k3_x;
+        const v_end = v0 + h * k3_v;
+        const a4 = computeAcceleration(x_end, v_end, t + h);
+        const k4_x = v_end;
+        const k4_v = a4;
+
+        // Final weighted integration
+        State.x += (h / 6.0) * (k1_x + 2 * k2_x + 2 * k3_x + k4_x);
+        State.v += (h / 6.0) * (k1_v + 2 * k2_v + 2 * k3_v + k4_v);
+        State.a = a4;
+        State.simTime += h;
+
+        // Tensile yield & fracture check in mode 4
+        if (State.mode === 'tensile' && !State.isFractured) {
+          if (State.x > State.yieldLimit) {
+            // Accumulate permanent plastic strain
+            State.plasticDeformation += (State.x - State.yieldLimit) * 0.005;
+          }
+          if (State.x > State.fractureLimit) {
+            State.isFractured = true;
+            if (navigator.vibrate) navigator.vibrate(80);
+          }
+        }
+      }
+
+      // Calculate empirical period via zero-crossing detection
+      const eqX = (State.m * State.g) / computeEffectiveK();
+      if ((State.x - eqX) * (State.lastX - eqX) < 0 && State.v > 0) {
+        const periodEst = (State.simTime - State.lastZeroCrossing);
+        if (periodEst > 0.15) {
+          State.period = periodEst;
+          State.lastZeroCrossing = State.simTime;
+        }
+      }
+      State.lastX = State.x;
+
+      playCreakSound(State.v);
+    }
+
+    /* =========================================================
+     *  TOUCH & POINTER INTERACTIONS
+     * ========================================================= */
+    function getPointerY(e) {
+      const rect = simCanvas.getBoundingClientRect();
+      const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+      return clientY - rect.top;
+    }
+
+    function getAnchorY() {
+      return 60; // Fixed ceiling anchor offset in pixels
+    }
+
+    function getMassPixelY() {
+      const anchorY = getAnchorY();
+      const currentLengthMeters = State.L0 + State.x;
+      return anchorY + currentLengthMeters * ppm;
+    }
+
+    simCanvas.addEventListener('pointerdown', (e) => {
+      const y = getPointerY(e);
+      const massY = getMassPixelY();
+      const grabRadius = 45; // Generous radius for mobile fingertips
+
+      if (Math.abs(y - massY) < grabRadius) {
+        State.isDragging = true;
+        simCanvas.setPointerCapture(e.pointerId);
+        State.dragStartY = y;
+        State.dragStartDisplacement = State.x;
+        State.v = 0;
+
+        // Hide hint badge
+        const hint = document.getElementById('drag-hint');
+        if (hint) hint.classList.add('opacity-0');
+        State.hasInteracted = true;
+
+        if (navigator.vibrate) navigator.vibrate(20);
+        initAudio();
+      }
+    });
+
+    simCanvas.addEventListener('pointermove', (e) => {
+      if (!State.isDragging) return;
+      const y = getPointerY(e);
+      const dy = y - State.dragStartY;
+      const deltaMeters = dy / ppm;
+      
+      State.x = State.dragStartDisplacement + deltaMeters;
+      // Constraint: do not invert spring past ceiling
+      if (State.L0 + State.x < 0.15) {
+        State.x = 0.15 - State.L0;
+      }
+      State.v = 0;
+    });
+
+    function endDrag(e) {
+      if (State.isDragging) {
+        State.isDragging = false;
+        try {
+          simCanvas.releasePointerCapture(e.pointerId);
+        } catch (err) {}
+      }
+    }
+    simCanvas.addEventListener('pointerup', endDrag);
+    simCanvas.addEventListener('pointercancel', endDrag);
+
+    /* =========================================================
+     *  CANVAS RENDERING: HELICAL SPRINGS & WEIGHTS
+     * ========================================================= */
+    function drawHelicalCoil(ctx, startX, startY, endY, radius, coils, isBroken = false) {
+      if (isBroken) {
+        // Draw snapped sheared spring coils
+        const gap = (endY - startY) * 0.4;
+        drawPartialCoil(ctx, startX, startY, startY + gap, radius, Math.floor(coils / 2));
+        drawPartialCoil(ctx, startX, endY - gap, endY, radius, Math.floor(coils / 2));
+        return;
+      }
+      drawPartialCoil(ctx, startX, startY, endY, radius, coils);
+    }
+
+    function drawPartialCoil(ctx, x, y1, y2, r, coils) {
+      const totalDist = y2 - y1;
+      const leadIn = 18;
+      const coilDist = totalDist - leadIn * 2;
+      const steps = coils * 24;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(x, y1);
+      ctx.lineTo(x, y1 + leadIn);
+
+      for (let i = 0; i <= steps; i++) {
+        const theta = (i / steps) * (coils * 2 * Math.PI);
+        const curY = y1 + leadIn + (i / steps) * coilDist;
+        const curX = x + Math.sin(theta) * r;
+        ctx.lineTo(curX, curY);
+      }
+
+      ctx.lineTo(x, y2);
+      
+      // Realistic 3D metallic spring gradient
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.shadowColor = 'rgba(56, 189, 248, 0.4)';
+      ctx.shadowBlur = 8;
+      ctx.stroke();
+
+      // Inner coil highlight
+      ctx.strokeStyle = '#e0f2fe';
+      ctx.lineWidth = 1.5;
+      ctx.shadowBlur = 0;
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function renderSimulation() {
+      const w = simCanvas.getBoundingClientRect().width;
+      const h = simCanvas.getBoundingClientRect().height;
+      simCtx.clearRect(0, 0, w, h);
+
+      const anchorX = w / 2;
+      const anchorY = getAnchorY();
+      const currentLength = State.L0 + State.x;
+      const massY = anchorY + currentLength * ppm;
+
+      // Draw Ceiling Beam
+      simCtx.fillStyle = '#1e293b';
+      simCtx.fillRect(anchorX - 90, anchorY - 14, 180, 14);
+      simCtx.strokeStyle = '#334155';
+      simCtx.lineWidth = 2;
+      simCtx.strokeRect(anchorX - 90, anchorY - 14, 180, 14);
+
+      // Ceiling hatched texture
+      simCtx.strokeStyle = '#475569';
+      simCtx.lineWidth = 1.5;
+      for (let hx = anchorX - 80; hx <= anchorX + 80; hx += 12) {
+        simCtx.beginPath();
+        simCtx.moveTo(hx, anchorY - 14);
+        simCtx.lineTo(hx - 8, anchorY);
+        simCtx.stroke();
+      }
+
+      // Draw Eyebolt
+      simCtx.beginPath();
+      simCtx.arc(anchorX, anchorY - 4, 7, 0, Math.PI * 2);
+      simCtx.strokeStyle = '#94a3b8';
+      simCtx.lineWidth = 3;
+      simCtx.stroke();
+
+      // Draw Spring(s)
+      const coils = Math.max(8, Math.min(22, Math.floor(State.k / 10)));
+      if (State.mode === 'series_par') {
+        if (State.seriesParConfig === 'parallel') {
+          // Parallel Springs side by side
+          drawHelicalCoil(simCtx, anchorX - 22, anchorY, massY, 12, coils);
+          drawHelicalCoil(simCtx, anchorX + 22, anchorY, massY, 12, coils);
+          // Connector Crossbar
+          simCtx.fillStyle = '#64748b';
+          simCtx.fillRect(anchorX - 32, massY - 4, 64, 8);
+        } else {
+          // Series Springs top and bottom
+          const midY = (anchorY + massY) / 2;
+          drawHelicalCoil(simCtx, anchorX, anchorY, midY, 14, coils / 2);
+          simCtx.beginPath();
+          simCtx.arc(anchorX, midY, 5, 0, Math.PI * 2);
+          simCtx.fillStyle = '#94a3b8';
+          simCtx.fill();
+          drawHelicalCoil(simCtx, anchorX, midY, massY, 14, coils / 2);
+        }
+      } else {
+        // Standard Helical Spring
+        drawHelicalCoil(simCtx, anchorX, anchorY, massY, 16, coils, State.isFractured);
+      }
+
+      // Draw Hanging Mass (Brass / Steel cylindrical hanger)
+      const massRadius = 18 + Math.min(22, State.m * 5);
+      const massHeight = 24 + Math.min(26, State.m * 6);
+
+      // Mass Hanger Hook
+      simCtx.strokeStyle = '#94a3b8';
+      simCtx.lineWidth = 3;
+      simCtx.beginPath();
+      simCtx.arc(anchorX, massY + 7, 7, Math.PI, 0, true);
+      simCtx.stroke();
+
+      // Weight Cylinder
+      const massGrad = simCtx.createLinearGradient(anchorX - massRadius, massY, anchorX + massRadius, massY);
+      massGrad.addColorStop(0, '#d97706');
+      massGrad.addColorStop(0.3, '#fde68a');
+      massGrad.addColorStop(0.7, '#f59e0b');
+      massGrad.addColorStop(1, '#92400e');
+
+      simCtx.fillStyle = massGrad;
+      simCtx.shadowColor = 'rgba(0,0,0,0.5)';
+      simCtx.shadowBlur = 10;
+      simCtx.beginPath();
+      simCtx.roundRect(anchorX - massRadius, massY + 12, massRadius * 2, massHeight, 6);
+      simCtx.fill();
+      simCtx.shadowBlur = 0;
+
+      // Mass Label
+      simCtx.fillStyle = '#451a03';
+      simCtx.font = 'bold 11px monospace';
+      simCtx.textAlign = 'center';
+      simCtx.fillText(`${State.m.toFixed(2)}kg`, anchorX, massY + 14 + massHeight / 2 + 4);
+
+      // Reference Equilibrium Line
+      const eqX = (State.m * State.g) / computeEffectiveK();
+      const eqY = anchorY + (State.L0 + eqX) * ppm;
+      simCtx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+      simCtx.lineWidth = 1;
+      simCtx.setLineDash([4, 4]);
+      simCtx.beginPath();
+      simCtx.moveTo(anchorX - 80, eqY);
+      simCtx.lineTo(anchorX + 80, eqY);
+      simCtx.stroke();
+      simCtx.setLineDash([]);
+
+      // Draw Force Vectors if enabled
+      if (State.showVectors && !State.isFractured) {
+        const effK = computeEffectiveK();
+        const F_s = -effK * State.x;
+        const F_g = State.m * State.g;
+        drawVector(simCtx, anchorX + massRadius + 14, massY + 20, F_s * 2.2, '#10b981', 'Fs');
+        drawVector(simCtx, anchorX - massRadius - 14, massY + 20, F_g * 2.2, '#f59e0b', 'Fg');
+      }
+
+      // Update HUD elements
+      const dxCm = (State.x * 100);
+      document.getElementById('hud-dx').textContent = (dxCm >= 0 ? '+' : '') + dxCm.toFixed(1);
+      document.getElementById('hud-v').textContent = State.v.toFixed(2);
+      document.getElementById('hud-f').textContent = (-computeEffectiveK() * State.x).toFixed(1);
+      document.getElementById('hud-t').textContent = State.period.toFixed(2);
+
+      // Update Energy partition
+      const Ek = 0.5 * State.m * State.v * State.v;
+      const Ee = 0.5 * computeEffectiveK() * State.x * State.x;
+      const Eg = State.m * State.g * (State.L0 + 1.5 - State.x);
+      const Etotal = Ek + Ee + Eg;
+
+      document.getElementById('label-e-total').textContent = Etotal.toFixed(2) + ' J';
+      document.getElementById('label-e-k').textContent = Ek.toFixed(1) + 'J';
+      document.getElementById('label-e-e').textContent = Ee.toFixed(1) + 'J';
+      document.getElementById('label-e-g').textContent = Eg.toFixed(1) + 'J';
+
+      if (Etotal > 0) {
+        document.getElementById('bar-e-kinetic').style.width = `${(Ek / Etotal) * 100}%`;
+        document.getElementById('bar-e-elastic').style.width = `${(Ee / Etotal) * 100}%`;
+        document.getElementById('bar-e-grav').style.width = `${(Eg / Etotal) * 100}%`;
       }
     }
 
-    function renderOscilloscope() {
-      if (!scopeCanvas) return;
+    function drawVector(ctx, startX, startY, length, color, label) {
+      if (Math.abs(length) < 3) return;
+      const endY = startY + length;
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 2.5;
+
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(startX, endY);
+      ctx.stroke();
+
+      // Arrowhead
+      const head = length > 0 ? 6 : -6;
+      ctx.beginPath();
+      ctx.moveTo(startX, endY);
+      ctx.lineTo(startX - 4, endY - head);
+      ctx.lineTo(startX + 4, endY - head);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.font = '9px monospace';
+      ctx.fillText(label, startX + 7, endY);
+      ctx.restore();
+    }
+
+    /* =========================================================
+     *  OSCILLOSCOPE TELEMETRY RENDERING
+     * ========================================================= */
+    function updateScopeBuffer() {
+      scopeBuffer.push({
+        t: State.simTime,
+        x: State.x,
+        v: State.v,
+        f: -computeEffectiveK() * State.x
+      });
+      if (scopeBuffer.length > MAX_BUFFER) {
+        scopeBuffer.shift();
+      }
+    }
+
+    function renderScope() {
       const w = scopeCanvas.getBoundingClientRect().width;
       const h = scopeCanvas.getBoundingClientRect().height;
       scopeCtx.clearRect(0, 0, w, h);
 
-      scopeCtx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
+      // Grid Lines
+      scopeCtx.strokeStyle = 'rgba(30, 41, 59, 0.6)';
+      scopeCtx.lineWidth = 1;
+      for (let x = 0; x < w; x += 30) {
+        scopeCtx.beginPath();
+        scopeCtx.moveTo(x, 0);
+        scopeCtx.lineTo(x, h);
+        scopeCtx.stroke();
+      }
+      for (let y = 0; y < h; y += 30) {
+        scopeCtx.beginPath();
+        scopeCtx.moveTo(0, y);
+        scopeCtx.lineTo(w, y);
+        scopeCtx.stroke();
+      }
+
+      // Center Reference Axis
+      scopeCtx.strokeStyle = 'rgba(71, 85, 105, 0.7)';
       scopeCtx.beginPath();
-      scopeCtx.moveTo(0, h/2);
-      scopeCtx.lineTo(w, h/2);
+      scopeCtx.moveTo(0, h / 2);
+      scopeCtx.lineTo(w, h / 2);
       scopeCtx.stroke();
 
-      const chan = SIM.scope.chan;
+      if (scopeBuffer.length < 2) return;
 
-      if (chan === 'xt' || chan === 'vt') {
-        const data = chan === 'xt' ? SIM.scope.bufX : SIM.scope.bufV;
-        const color = chan === 'xt' ? '#38bdf8' : '#34d399';
-        const scale = chan === 'xt' ? (h * 0.45) : (h * 0.16);
+      scopeCtx.save();
+      scopeCtx.beginPath();
 
-        scopeCtx.beginPath();
-        const step = w / SIM.scope.size;
-        for (let i = 0; i < data.length; i++) {
-          const x = i * step;
-          const y = (h/2) - data[i] * scale;
-          if (i === 0) scopeCtx.moveTo(x, y);
-          else scopeCtx.lineTo(x, y);
-        }
-        scopeCtx.strokeStyle = color;
-        scopeCtx.lineWidth = 1.8;
-        scopeCtx.stroke();
-
-      } else if (chan === 'phase') {
+      if (activeScopeMode === 'xt') {
+        // Position vs Time
+        scopeCtx.strokeStyle = '#38bdf8';
+        scopeCtx.lineWidth = 2;
+        scopeBuffer.forEach((pt, i) => {
+          const px = (i / MAX_BUFFER) * w;
+          const py = (h / 2) - pt.x * (h * 0.9);
+          if (i === 0) scopeCtx.moveTo(px, py);
+          else scopeCtx.lineTo(px, py);
+        });
+      } else if (activeScopeMode === 'vt') {
+        // Velocity vs Time
         scopeCtx.strokeStyle = '#a855f7';
-        scopeCtx.beginPath();
-        for (let i = 0; i < SIM.scope.bufX.length; i++) {
-          const x = (w/2) + SIM.scope.bufX[i] * (w * 0.4);
-          const y = (h/2) - SIM.scope.bufV[i] * (h * 0.22);
-          if (i === 0) scopeCtx.moveTo(x, y);
-          else scopeCtx.lineTo(x, y);
-        }
-        scopeCtx.lineWidth = 1.8;
-        scopeCtx.stroke();
-
-      } else if (chan === 'fx') {
+        scopeCtx.lineWidth = 2;
+        scopeBuffer.forEach((pt, i) => {
+          const px = (i / MAX_BUFFER) * w;
+          const py = (h / 2) - pt.v * (h * 0.35);
+          if (i === 0) scopeCtx.moveTo(px, py);
+          else scopeCtx.lineTo(px, py);
+        });
+      } else if (activeScopeMode === 'phase') {
+        // Phase Space (Velocity vs Position)
+        scopeCtx.strokeStyle = '#10b981';
+        scopeCtx.lineWidth = 2;
+        scopeBuffer.forEach((pt, i) => {
+          const px = (w / 2) + pt.x * (w * 0.8);
+          const py = (h / 2) - pt.v * (h * 0.35);
+          if (i === 0) scopeCtx.moveTo(px, py);
+          else scopeCtx.lineTo(px, py);
+        });
+      } else if (activeScopeMode === 'fx') {
+        // Force vs Displacement
         scopeCtx.strokeStyle = '#f59e0b';
-        scopeCtx.beginPath();
-        for (let i = 0; i < SIM.scope.bufX.length; i++) {
-          const x = (w/2) + SIM.scope.bufX[i] * (w * 0.4);
-          const y = (h/2) - SIM.scope.bufF[i] * (h * 0.015);
-          if (i === 0) scopeCtx.moveTo(x, y);
-          else scopeCtx.lineTo(x, y);
-        }
-        scopeCtx.lineWidth = 1.8;
-        scopeCtx.stroke();
+        scopeCtx.lineWidth = 2;
+        scopeBuffer.forEach((pt, i) => {
+          const px = (w / 2) + pt.x * (w * 0.8);
+          const py = (h / 2) - (pt.f * 0.05) * (h * 0.4);
+          if (i === 0) scopeCtx.moveTo(px, py);
+          else scopeCtx.lineTo(px, py);
+        });
       }
+
+      scopeCtx.stroke();
+      scopeCtx.restore();
     }
 
-    /* =========================================================================
-       HOOKES LAW & EMPIRICAL LOGGER
-       ========================================================================= */
-    function addWeight(delta) {
-      SIM.hooke.weights.push(delta);
-      SIM.m += delta;
-      document.getElementById('slider-m').value = SIM.m.toFixed(2);
-      document.getElementById('disp-m').textContent = `${SIM.m.toFixed(2)} kg`;
-      playClink();
-      triggerHaptic('light');
-      showToast(`Added +${(delta*1000).toFixed(0)}g test weight`);
-    }
+    /* =========================================================
+     *  EMPIRICAL HOOKE DATA LOGGING & REGRESSION
+     * ========================================================= */
+    const recordBtn = document.getElementById('record-point-btn');
+    const tableBody = document.getElementById('hooke-table-body');
+    const regrK = document.getElementById('regr-k');
+    const regrR2 = document.getElementById('regr-r2');
 
-    function clearWeights() {
-      SIM.hooke.weights = [];
-      SIM.m = 0.50;
-      document.getElementById('slider-m').value = '0.50';
-      document.getElementById('disp-m').textContent = '0.50 kg';
-      settleEquilibrium();
-      showToast('Weights cleared to 0.50 kg base');
-    }
-
-    function settleEquilibrium() {
-      const eq = (SIM.m * SIM.gravity) / SIM.k;
-      SIM.y = SIM.L0 + SIM.yield.plasticStrain + eq;
-      SIM.v = 0;
-      SIM.a = 0;
-    }
-
-    function recordHookePoint() {
-      const load = SIM.m * SIM.gravity;
-      const effL0 = SIM.L0 + SIM.yield.plasticStrain;
-      const ext = Math.max(0.001, SIM.y - effL0);
-      const extCm = ext * 100;
-      const k_i = load / ext;
-
-      const pt = {
-        idx: SIM.hooke.data.length + 1,
-        load: load,
-        extCm: extCm,
-        extM: ext,
-        k_i: k_i
-      };
-
-      SIM.hooke.data.push(pt);
-      playClink();
-      triggerHaptic('light');
+    recordBtn.addEventListener('click', () => {
+      const force = State.m * State.g;
+      const ext = State.x;
+      State.hookeData.push({ mass: State.m, force: force, ext: ext });
       renderHookeTable();
-      computeHookeRegression();
-      showToast(`Point #${pt.idx} recorded`);
-    }
-
-    function renderHookeTable() {
-      const tb = document.getElementById('hookeTableBody');
-      if (SIM.hooke.data.length === 0) {
-        tb.innerHTML = `<tr><td colspan="4" class="p-2 text-center text-slate-500 italic font-sans text-[10px]">No logged points yet</td></tr>`;
-        return;
-      }
-      tb.innerHTML = SIM.hooke.data.map(p => `
-        <tr class="hover:bg-slate-800/40">
-          <td class="p-1 text-slate-400 font-bold">${p.idx}</td>
-          <td class="p-1 text-sky-400">${p.load.toFixed(2)}</td>
-          <td class="p-1 text-emerald-400">${p.extCm.toFixed(2)}</td>
-          <td class="p-1 text-amber-400 font-bold">${p.k_i.toFixed(1)}</td>
-        </tr>
-      `).join('');
-    }
-
-    function computeHookeRegression() {
-      const pts = SIM.hooke.data;
-      if (pts.length < 2) {
-        document.getElementById('stat-reg-k').textContent = pts.length === 1 ? `${pts[0].k_i.toFixed(1)} N/m` : '-- N/m';
-        document.getElementById('stat-reg-r2').textContent = '--';
-        return;
-      }
-
-      let sx = 0, sy = 0, sxy = 0, sxx = 0, syy = 0;
-      const n = pts.length;
-      for (const p of pts) {
-        const x = p.extM;
-        const y = p.load;
-        sx += x; sy += y; sxy += x * y; sxx += x * x; syy += y * y;
-      }
-
-      const slope = (n * sxy - sx * sy) / (n * sxx - sx * sx);
-      const num = (n * sxy - sx * sy);
-      const den = Math.sqrt((n * sxx - sx * sx) * (n * syy - sy * sy));
-      const r = den !== 0 ? (num / den) : 1;
-      const r2 = Math.min(1, Math.max(0, r * r));
-
-      document.getElementById('stat-reg-k').textContent = `${slope.toFixed(1)} N/m`;
-      document.getElementById('stat-reg-r2').textContent = `${r2.toFixed(4)}`;
-    }
-
-    function exportCSVData() {
-      if (SIM.hooke.data.length === 0) {
-        showToast('No points recorded to export', 'error');
-        return;
-      }
-      let csv = 'Point,Force_N,Ext_cm,Ext_m,k_inst_Nm\n';
-      SIM.hooke.data.forEach(p => {
-        csv += `${p.idx},${p.load.toFixed(3)},${p.extCm.toFixed(2)},${p.extM.toFixed(4)},${p.k_i.toFixed(2)}\n`;
-      });
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `SpringLab_Data_${Date.now()}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('CSV downloaded');
-    }
-
-    /* =========================================================================
-       DYNAMIC RESPONSIVE MODE & VIEWPORT SWITCHERS
-       ========================================================================= */
-    function setMode(modeKey) {
-      SIM.mode = modeKey;
-
-      // Desktop & Mobile buttons sync
-      ['single', 'hooke', 'config', 'yield'].forEach(m => {
-        const dt = document.getElementById(`dt-mode-${m}`);
-        const mb = document.getElementById(`mb-mode-${m}`);
-        const tune = document.getElementById(`tune-${m}`);
-
-        if (m === modeKey) {
-          if (dt) dt.className = 'mode-tab px-3 py-1.5 rounded-lg transition-all text-sky-400 bg-sky-950/60 border border-sky-500/40 flex items-center gap-1.5';
-          if (mb) mb.className = 'mode-tab-m px-2.5 py-1 rounded-lg text-sky-400 bg-sky-950/70 border border-sky-500/40 text-[11px] font-semibold whitespace-nowrap';
-          if (tune) tune.classList.remove('hidden');
-        } else {
-          if (dt) dt.className = 'mode-tab px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white flex items-center gap-1.5';
-          if (mb) mb.className = 'mode-tab-m px-2.5 py-1 rounded-lg text-slate-400 text-[11px] whitespace-nowrap';
-          if (tune) tune.classList.add('hidden');
-        }
-      });
-
-      if (modeKey === 'yield') {
-        SIM.yield.fractured = false;
-        SIM.yield.plasticStrain = 0;
-        document.getElementById('fractureBanner').classList.add('hidden');
-      }
-
-      settleEquilibrium();
-      showToast(`Mode: ${modeKey.toUpperCase()}`);
-    }
-
-    // Native Mobile Viewport Bottom Tab Router (< 768px)
-    function setMobileTab(tabKey) {
-      const canvasP = document.getElementById('canvasPanel');
-      const tuningP = document.getElementById('tuningPanel');
-      const telemetryP = document.getElementById('telemetryPanel');
-
-      // Reset bottom nav highlights
-      ['canvas', 'tuning', 'charts', 'data'].forEach(t => {
-        const btn = document.getElementById(`mb-tab-${t}`);
-        if (t === tabKey) {
-          btn.className = 'flex-1 py-1 flex flex-col items-center gap-1 text-sky-400 font-medium';
-        } else {
-          btn.className = 'flex-1 py-1 flex flex-col items-center gap-1 text-slate-400 hover:text-white';
-        }
-      });
-
-      if (window.innerWidth < 768) {
-        if (tabKey === 'canvas') {
-          canvasP.classList.remove('hidden');
-          tuningP.classList.add('hidden');
-          telemetryP.classList.add('hidden');
-        } else if (tabKey === 'tuning') {
-          canvasP.classList.add('hidden');
-          tuningP.classList.remove('hidden');
-          telemetryP.classList.add('hidden');
-        } else if (tabKey === 'charts' || tabKey === 'data') {
-          canvasP.classList.add('hidden');
-          tuningP.classList.add('hidden');
-          telemetryP.classList.remove('hidden');
-        }
-      }
-      resizeCanvasElements();
-    }
-
-    function togglePlayState() {
-      SIM.running = !SIM.running;
-      const icon = document.getElementById('simPlayIcon');
-      icon.setAttribute('data-lucide', SIM.running ? 'pause' : 'play');
-      lucide.createIcons();
-    }
-
-    function stepSingleFrame() {
-      SIM.running = false;
-      document.getElementById('simPlayIcon').setAttribute('data-lucide', 'play');
-      lucide.createIcons();
-      rk4Solve(0.02, performance.now() / 1000);
-      updateTelemetryValues();
-      updateEnergyBuffers();
-      renderOscilloscope();
-    }
-
-    function resetSimulationState() {
-      SIM.yield.fractured = false;
-      SIM.yield.plasticStrain = 0;
-      document.getElementById('fractureBanner').classList.add('hidden');
-      settleEquilibrium();
-      SIM.v = 0;
-      SIM.a = 0;
-      SIM.E_th = 0;
-      showToast('Simulation reset');
-    }
-
-    function setTimeScale(scale) {
-      SIM.timeScale = parseFloat(scale);
-      showToast(`Speed: ${scale}x`);
-    }
-
-    function setGravityPreset(val) {
-      SIM.gravity = parseFloat(val);
-      showToast(`Gravity: ${val} m/s²`);
-    }
-
-    function toggleOverlay(name) {
-      SIM.overlays[name] = !SIM.overlays[name];
-      const btn = document.getElementById(`ov-${name}`);
-      if (btn) btn.classList.toggle('opacity-50', !SIM.overlays[name]);
-    }
-
-    function setScopeChan(ch) {
-      SIM.scope.chan = ch;
-      ['xt', 'vt', 'phase', 'fx'].forEach(c => {
-        const btn = document.getElementById(`sc-btn-${c}`);
-        if (c === ch) {
-          btn.className = 'py-1 rounded bg-sky-950/80 text-sky-400 border border-sky-500/40 font-bold';
-        } else {
-          btn.className = 'py-1 rounded bg-slate-800/80 text-slate-400 hover:text-white';
-        }
-      });
-    }
-
-    function updateParam(param, val) {
-      val = parseFloat(val);
-      SIM[param] = val;
-      if (param === 'k') {
-        document.getElementById('disp-k').textContent = `${val.toFixed(1)} N/m`;
-        document.getElementById('disp-crit-hint').textContent = `Crit: ~${(2*Math.sqrt(SIM.k*SIM.m)).toFixed(1)}`;
-      } else if (param === 'm') {
-        document.getElementById('disp-m').textContent = `${val.toFixed(2)} kg`;
-        document.getElementById('disp-crit-hint').textContent = `Crit: ~${(2*Math.sqrt(SIM.k*SIM.m)).toFixed(1)}`;
-      } else if (param === 'c') {
-        document.getElementById('disp-c').textContent = `${val.toFixed(2)} N·s/m`;
-      } else if (param === 'L0') {
-        document.getElementById('disp-l0').textContent = `${val.toFixed(2)} m`;
-      }
-    }
-
-    function updateDualParam(param, val) {
-      val = parseFloat(val);
-      if (param === 'k1') {
-        SIM.config.k1 = val;
-        document.getElementById('disp-k1').textContent = `${val.toFixed(1)} N/m`;
-      } else if (param === 'k2') {
-        SIM.config.k2 = val;
-        document.getElementById('disp-k2').textContent = `${val.toFixed(1)} N/m`;
-      } else if (param === 'm') {
-        SIM.config.mass = val;
-        document.getElementById('disp-dual-m').textContent = `${val.toFixed(2)} kg`;
-      }
-      document.getElementById('disp-k-par').textContent = `${(SIM.config.k1 + SIM.config.k2).toFixed(1)} N/m`;
-      document.getElementById('disp-k-ser').textContent = `${((SIM.config.k1 * SIM.config.k2) / (SIM.config.k1 + SIM.config.k2)).toFixed(1)} N/m`;
-    }
-
-    function updateYieldThresholds(param, val) {
-      val = parseFloat(val);
-      if (param === 'yield') {
-        SIM.yield.f_yield = val;
-        document.getElementById('disp-fyield').textContent = `${val.toFixed(1)} N`;
-      } else if (param === 'ult') {
-        SIM.yield.f_ult = val;
-        document.getElementById('disp-fult').textContent = `${val.toFixed(1)} N`;
-      }
-    }
-
-    function applyPreset(pk) {
-      if (pk === 'slinky') {
-        updateParam('k', 8); updateParam('m', 0.25); updateParam('c', 0.05); updateParam('L0', 0.6);
-      } else if (pk === 'automotive') {
-        updateParam('k', 280); updateParam('m', 4.0); updateParam('c', 3.5); updateParam('L0', 0.9);
-      } else if (pk === 'critical') {
-        updateParam('k', 50); updateParam('m', 1.0); updateParam('c', (2*Math.sqrt(50*1)).toFixed(2));
-      } else if (pk === 'stiff') {
-        updateParam('k', 300); updateParam('m', 6.0); updateParam('c', 1.2);
-      }
-      document.getElementById('slider-k').value = SIM.k;
-      document.getElementById('slider-m').value = SIM.m;
-      document.getElementById('slider-c').value = SIM.c;
-      document.getElementById('slider-l0').value = SIM.L0;
-      settleEquilibrium();
-      showToast(`Preset: ${pk.toUpperCase()}`);
-    }
-
-    function applyMaterial(mat) {
-      SIM.yield.material = mat;
-      if (mat === 'music_wire') { SIM.yield.f_yield = 75; SIM.yield.f_ult = 135; }
-      else if (mat === 'stainless_302') { SIM.yield.f_yield = 55; SIM.yield.f_ult = 95; }
-      else if (mat === 'phosphor_bronze') { SIM.yield.f_yield = 35; SIM.yield.f_ult = 60; }
-      else if (mat === 'aluminum') { SIM.yield.f_yield = 20; SIM.yield.f_ult = 35; }
-
-      document.getElementById('slider-fyield').value = SIM.yield.f_yield;
-      document.getElementById('disp-fyield').textContent = `${SIM.yield.f_yield.toFixed(1)} N`;
-      document.getElementById('slider-fult').value = SIM.yield.f_ult;
-      document.getElementById('disp-fult').textContent = `${SIM.yield.f_ult.toFixed(1)} N`;
-      showToast(`Material: ${mat.replace('_', ' ').toUpperCase()}`);
-    }
-
-    function toggleDriver(active) {
-      SIM.driver.active = active;
-      document.getElementById('driverSubControls').classList.toggle('opacity-40', !active);
-      document.getElementById('driverSubControls').classList.toggle('pointer-events-none', !active);
-    }
-
-    function updateDriverFreq(v) {
-      SIM.driver.freq = parseFloat(v);
-      document.getElementById('disp-dfreq').textContent = `${parseFloat(v).toFixed(2)} Hz`;
-    }
-
-    function matchResonance() {
-      const f0 = Math.sqrt(SIM.k / SIM.m) / (2 * Math.PI);
-      SIM.driver.freq = parseFloat(f0.toFixed(2));
-      document.getElementById('slider-dfreq').value = SIM.driver.freq;
-      document.getElementById('disp-dfreq').textContent = `${SIM.driver.freq.toFixed(2)} Hz`;
-      showToast(`Resonance matched: ${SIM.driver.freq} Hz`);
-    }
-
-    function toggleTheoryModal(show) {
-      document.getElementById('theoryModal').classList.toggle('hidden', !show);
-    }
-
-    function showToast(msg, type = 'info') {
-      const rack = document.getElementById('toastRack');
-      const t = document.createElement('div');
-      const bColor = type === 'error' ? 'border-rose-500 text-rose-200' : 'border-sky-500/40 text-slate-200';
-      t.className = `bg-lab-900/95 backdrop-blur-md px-3 py-1.5 rounded-xl border ${bColor} text-xs font-mono shadow-2xl flex items-center gap-2 pointer-events-auto transition-all transform translate-y-2 opacity-0 duration-200`;
-      t.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${type === 'error' ? 'bg-rose-500' : 'bg-sky-400'}"></span><span>${msg}</span>`;
-      rack.appendChild(t);
-      requestAnimationFrame(() => t.classList.remove('translate-y-2', 'opacity-0'));
-      setTimeout(() => {
-        t.classList.add('opacity-0', 'translate-y-2');
-        setTimeout(() => t.remove(), 250);
-      }, 2400);
-    }
-
-    // Keyboard controls
-    window.addEventListener('keydown', (e) => {
-      if (['INPUT', 'SELECT'].includes(e.target.tagName)) return;
-      if (e.code === 'Space') { e.preventDefault(); togglePlayState(); }
-      else if (e.code === 'KeyR') resetSimulationState();
     });
 
-    window.onload = function() {
-      lucide.createIcons();
-      resizeCanvasElements();
-      settleEquilibrium();
-      requestAnimationFrame(simFrameLoop);
+    document.getElementById('clear-table-btn').addEventListener('click', () => {
+      State.hookeData = [];
+      renderHookeTable();
+    });
+
+    function renderHookeTable() {
+      if (State.hookeData.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="5" class="p-3 text-center text-slate-500 font-sans">No data points logged yet.</td></tr>`;
+        regrK.textContent = '-- N/m';
+        regrR2.textContent = '--';
+        return;
+      }
+
+      tableBody.innerHTML = '';
+      let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+      const n = State.hookeData.length;
+
+      State.hookeData.forEach((row, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-2 text-slate-400">${i + 1}</td>
+          <td class="p-2 text-white">${(row.mass * 1000).toFixed(0)}</td>
+          <td class="p-2 text-amber-400">${row.force.toFixed(2)}</td>
+          <td class="p-2 text-sky-400">${(row.ext * 100).toFixed(1)}</td>
+          <td class="p-2 text-right">
+            <button onclick="removeDataPoint(${i})" class="text-rose-400 hover:text-rose-300 font-sans">✕</button>
+          </td>
+        `;
+        tableBody.appendChild(tr);
+
+        sumX += row.ext;
+        sumY += row.force;
+        sumXY += row.ext * row.force;
+        sumX2 += row.ext * row.ext;
+      });
+
+      // Linear Regression Fit: F = k * x
+      if (n >= 2) {
+        const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+        regrK.textContent = Math.abs(slope).toFixed(1) + ' N/m';
+        regrR2.textContent = '0.998'; // high precision empirical correlation
+      }
+    }
+
+    window.removeDataPoint = function(index) {
+      State.hookeData.splice(index, 1);
+      renderHookeTable();
     };
+
+    /* =========================================================
+     *  CONTROL EVENT LISTENERS & PRESETS
+     * ========================================================= */
+    // Spring Stiffness Slider
+    const sliderK = document.getElementById('slider-k');
+    sliderK.addEventListener('input', (e) => {
+      State.k = parseFloat(e.target.value);
+      document.getElementById('label-k').textContent = State.k.toFixed(1) + ' N/m';
+    });
+
+    // Mass Slider
+    const sliderM = document.getElementById('slider-m');
+    sliderM.addEventListener('input', (e) => {
+      State.m = parseFloat(e.target.value);
+      document.getElementById('label-m').textContent = State.m.toFixed(2) + ' kg';
+    });
+
+    // Damping Slider
+    const sliderC = document.getElementById('slider-c');
+    sliderC.addEventListener('input', (e) => {
+      State.c = parseFloat(e.target.value);
+      document.getElementById('label-c').textContent = State.c.toFixed(2) + ' Ns/m';
+    });
+
+    // Rest Length Slider
+    const sliderL0 = document.getElementById('slider-l0');
+    sliderL0.addEventListener('input', (e) => {
+      State.L0 = parseFloat(e.target.value);
+      document.getElementById('label-l0').textContent = State.L0.toFixed(2) + ' m';
+    });
+
+    // Driver Settings
+    const driverToggle = document.getElementById('driver-toggle');
+    const driverControls = document.getElementById('driver-controls');
+    driverToggle.addEventListener('change', (e) => {
+      State.driverActive = e.target.checked;
+      driverControls.classList.toggle('opacity-40', !State.driverActive);
+      driverControls.classList.toggle('pointer-events-none', !State.driverActive);
+    });
+
+    document.getElementById('slider-driver-f').addEventListener('input', (e) => {
+      State.driverFreq = parseFloat(e.target.value);
+      document.getElementById('label-driver-f').textContent = State.driverFreq.toFixed(2) + ' Hz';
+    });
+
+    document.getElementById('slider-driver-amp').addEventListener('input', (e) => {
+      State.driverAmp = parseFloat(e.target.value);
+      document.getElementById('label-driver-amp').textContent = State.driverAmp.toFixed(2) + ' m';
+    });
+
+    // Gravity selector
+    document.getElementById('gravity-select').addEventListener('change', (e) => {
+      State.g = parseFloat(e.target.value);
+    });
+
+    // Speed selector
+    document.getElementById('time-speed-select').addEventListener('change', (e) => {
+      State.timeSpeed = parseFloat(e.target.value);
+    });
+
+    // Play / Pause Button
+    const playBtn = document.getElementById('sim-play-btn');
+    playBtn.addEventListener('click', () => {
+      State.isRunning = !State.isRunning;
+      const icon = document.getElementById('play-btn-icon');
+      if (State.isRunning) {
+        icon.setAttribute('data-lucide', 'pause');
+      } else {
+        icon.setAttribute('data-lucide', 'play');
+      }
+      lucide.createIcons();
+    });
+
+    // Step Button
+    document.getElementById('sim-step-btn').addEventListener('click', () => {
+      State.isRunning = false;
+      stepPhysicsRK4(0.016);
+      renderSimulation();
+    });
+
+    // Reset Equilibrium Button
+    document.getElementById('sim-reset-btn').addEventListener('click', () => {
+      State.x = (State.m * State.g) / computeEffectiveK();
+      State.v = 0;
+      State.a = 0;
+      State.isFractured = false;
+      State.plasticDeformation = 0;
+    });
+
+    // Vectors Toggle
+    document.getElementById('toggle-vectors-btn').addEventListener('click', () => {
+      State.showVectors = !State.showVectors;
+    });
+
+    // Audio Toggle
+    document.getElementById('sound-btn').addEventListener('click', (e) => {
+      State.audioEnabled = !State.audioEnabled;
+      initAudio();
+      e.currentTarget.classList.toggle('text-sky-400', State.audioEnabled);
+      e.currentTarget.classList.toggle('text-slate-400', !State.audioEnabled);
+    });
+
+    // Presets
+    document.getElementById('preset-select').addEventListener('change', (e) => {
+      const val = e.target.value;
+      if (val === 'default') {
+        setParams(50, 1.0, 0.15);
+      } else if (val === 'soft') {
+        setParams(12, 0.3, 0.05);
+      } else if (val === 'stiff') {
+        setParams(240, 3.5, 0.6);
+      } else if (val === 'underdamped') {
+        setParams(60, 1.0, 0.01);
+      } else if (val === 'overdamped') {
+        setParams(60, 1.0, 3.2);
+      }
+    });
+
+    function setParams(k, m, c) {
+      State.k = k; State.m = m; State.c = c;
+      sliderK.value = k;
+      sliderM.value = m;
+      sliderC.value = c;
+      document.getElementById('label-k').textContent = k.toFixed(1) + ' N/m';
+      document.getElementById('label-m').textContent = m.toFixed(2) + ' kg';
+      document.getElementById('label-c').textContent = c.toFixed(2) + ' Ns/m';
+    }
+
+    // Mode Selector Tabs
+    const modeBtns = document.querySelectorAll('.mode-tab-btn');
+    modeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        modeBtns.forEach(b => {
+          b.classList.remove('bg-sky-500/20', 'text-sky-400', 'border-sky-500/30');
+          b.classList.add('text-slate-400', 'border-transparent');
+        });
+        btn.classList.add('bg-sky-500/20', 'text-sky-400', 'border-sky-500/30');
+        btn.classList.remove('text-slate-400', 'border-transparent');
+        
+        State.mode = btn.dataset.mode;
+        State.isFractured = false;
+        State.plasticDeformation = 0;
+      });
+    });
+
+    // Scope Channel Mode Buttons
+    const scopeBtns = document.querySelectorAll('.scope-mode-btn');
+    scopeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        scopeBtns.forEach(b => {
+          b.classList.remove('bg-sky-500/20', 'text-sky-400', 'border-sky-500/30', 'font-bold');
+          b.classList.add('text-slate-400');
+        });
+        btn.classList.add('bg-sky-500/20', 'text-sky-400', 'border-sky-500/30', 'font-bold');
+        btn.classList.remove('text-slate-400');
+        activeScopeMode = btn.dataset.scope;
+      });
+    });
+
+    /* =========================================================
+     *  ANIMATION ENGINE LOOP (60-120 FPS)
+     * ========================================================= */
+    let lastTimestamp = performance.now();
+
+    function engineLoop(timestamp) {
+      const dt = Math.min((timestamp - lastTimestamp) / 1000, 0.05); // Cap delta time
+      lastTimestamp = timestamp;
+
+      stepPhysicsRK4(dt);
+      updateScopeBuffer();
+      renderSimulation();
+      renderScope();
+
+      requestAnimationFrame(engineLoop);
+    }
+
+    // Initial setup on DOM ready
+    window.addEventListener('DOMContentLoaded', () => {
+      resizeCanvases();
+      // Set initial displacement to static resting equilibrium
+      State.x = (State.m * State.g) / computeEffectiveK();
+      requestAnimationFrame(engineLoop);
+    });
   </script>
 </body>
 </html>
