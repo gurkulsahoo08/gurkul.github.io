@@ -1,11 +1,16 @@
 {
+  "id": "/gurkul.github.io/",
   "name": "Spring Studio",
   "short_name": "Spring",
-  "start_url": "./",
+  "description": "An interactive digital studio and project space.",
+  "lang": "en-US",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#ffffff",
   "theme_color": "#000000",
+  "categories": ["utilities", "education"],
   "icons": [
     {
       "src": "icon-192.png",
@@ -18,6 +23,15 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "App Preview"
     }
   ]
 }
